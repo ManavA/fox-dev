@@ -1,0 +1,526 @@
+[
+ {
+  "id": "build-1",
+  "fam": "build",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10931,
+  "hit": false
+ },
+ {
+  "id": "build-1",
+  "fam": "build",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10931,
+  "hit": false
+ },
+ {
+  "id": "build-1",
+  "fam": "build",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8737,
+  "hit": false
+ },
+ {
+  "id": "build-1",
+  "fam": "build",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8737,
+  "hit": false
+ },
+ {
+  "id": "build-2",
+  "fam": "build",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10968,
+  "hit": false
+ },
+ {
+  "id": "build-2",
+  "fam": "build",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10968,
+  "hit": false
+ },
+ {
+  "id": "build-2",
+  "fam": "build",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8774,
+  "hit": false
+ },
+ {
+  "id": "build-2",
+  "fam": "build",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8774,
+  "hit": false
+ },
+ {
+  "id": "handoff-1",
+  "fam": "handoff",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10922,
+  "hit": false
+ },
+ {
+  "id": "handoff-1",
+  "fam": "handoff",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10922,
+  "hit": false
+ },
+ {
+  "id": "handoff-1",
+  "fam": "handoff",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8728,
+  "hit": false
+ },
+ {
+  "id": "handoff-1",
+  "fam": "handoff",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8728,
+  "hit": false
+ },
+ {
+  "id": "handoff-2",
+  "fam": "handoff",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10925,
+  "hit": false
+ },
+ {
+  "id": "handoff-2",
+  "fam": "handoff",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10925,
+  "hit": false
+ },
+ {
+  "id": "handoff-2",
+  "fam": "handoff",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8731,
+  "hit": false
+ },
+ {
+  "id": "handoff-2",
+  "fam": "handoff",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8731,
+  "hit": false
+ },
+ {
+  "id": "research-1",
+  "fam": "research",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10941,
+  "hit": false
+ },
+ {
+  "id": "research-1",
+  "fam": "research",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10941,
+  "hit": false
+ },
+ {
+  "id": "research-1",
+  "fam": "research",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:research",
+  "all": [
+   "fox-dev:research"
+  ],
+  "usage": 8747,
+  "hit": true
+ },
+ {
+  "id": "research-1",
+  "fam": "research",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:research",
+  "all": [
+   "fox-dev:research"
+  ],
+  "usage": 8747,
+  "hit": true
+ },
+ {
+  "id": "research-2",
+  "fam": "research",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10936,
+  "hit": false
+ },
+ {
+  "id": "research-2",
+  "fam": "research",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10936,
+  "hit": false
+ },
+ {
+  "id": "research-2",
+  "fam": "research",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:research",
+  "all": [
+   "fox-dev:research"
+  ],
+  "usage": 8742,
+  "hit": true
+ },
+ {
+  "id": "research-2",
+  "fam": "research",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:research",
+  "all": [
+   "fox-dev:research"
+  ],
+  "usage": 8742,
+  "hit": true
+ },
+ {
+  "id": "review-2",
+  "fam": "review",
+  "arm": "A",
+  "s": "s1",
+  "first": "code-review",
+  "all": [
+   "code-review"
+  ],
+  "usage": 10932,
+  "hit": false
+ },
+ {
+  "id": "review-2",
+  "fam": "review",
+  "arm": "A",
+  "s": "s2",
+  "first": "code-review",
+  "all": [
+   "code-review"
+  ],
+  "usage": 10932,
+  "hit": false
+ },
+ {
+  "id": "review-2",
+  "fam": "review",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:review",
+  "all": [
+   "fox-dev:review"
+  ],
+  "usage": 8738,
+  "hit": true
+ },
+ {
+  "id": "review-2",
+  "fam": "review",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:review",
+  "all": [
+   "fox-dev:review"
+  ],
+  "usage": 8738,
+  "hit": true
+ },
+ {
+  "id": "shape-1",
+  "fam": "shape",
+  "arm": "A",
+  "s": "s1",
+  "first": "superpowers:brainstorming",
+  "all": [
+   "superpowers:brainstorming"
+  ],
+  "usage": 10912,
+  "hit": true
+ },
+ {
+  "id": "shape-1",
+  "fam": "shape",
+  "arm": "A",
+  "s": "s2",
+  "first": "superpowers:brainstorming",
+  "all": [
+   "superpowers:brainstorming"
+  ],
+  "usage": 10912,
+  "hit": true
+ },
+ {
+  "id": "shape-1",
+  "fam": "shape",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8718,
+  "hit": false
+ },
+ {
+  "id": "shape-1",
+  "fam": "shape",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8718,
+  "hit": false
+ },
+ {
+  "id": "ship-1",
+  "fam": "ship",
+  "arm": "A",
+  "s": "s1",
+  "first": "superpowers:finishing-a-development-branch",
+  "all": [
+   "superpowers:finishing-a-development-branch"
+  ],
+  "usage": 10911,
+  "hit": true
+ },
+ {
+  "id": "ship-1",
+  "fam": "ship",
+  "arm": "A",
+  "s": "s2",
+  "first": "superpowers:finishing-a-development-branch",
+  "all": [
+   "superpowers:finishing-a-development-branch"
+  ],
+  "usage": 10911,
+  "hit": true
+ },
+ {
+  "id": "ship-1",
+  "fam": "ship",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:ship",
+  "all": [
+   "fox-dev:ship",
+   "fox-dev:verify"
+  ],
+  "usage": 8717,
+  "hit": true
+ },
+ {
+  "id": "ship-1",
+  "fam": "ship",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:ship",
+  "all": [
+   "fox-dev:ship",
+   "fox-dev:verify"
+  ],
+  "usage": 8717,
+  "hit": true
+ },
+ {
+  "id": "swarm-1",
+  "fam": "swarm",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10955,
+  "hit": false
+ },
+ {
+  "id": "swarm-1",
+  "fam": "swarm",
+  "arm": "A",
+  "s": "s2",
+  "first": "superpowers:dispatching-parallel-agents",
+  "all": [
+   "superpowers:dispatching-parallel-agents"
+  ],
+  "usage": 10955,
+  "hit": true
+ },
+ {
+  "id": "swarm-1",
+  "fam": "swarm",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8761,
+  "hit": false
+ },
+ {
+  "id": "swarm-1",
+  "fam": "swarm",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8761,
+  "hit": false
+ },
+ {
+  "id": "wfa-1",
+  "fam": "write-for-agents",
+  "arm": "A",
+  "s": "s1",
+  "first": "init",
+  "all": [
+   "init"
+  ],
+  "usage": 10918,
+  "hit": false
+ },
+ {
+  "id": "wfa-1",
+  "fam": "write-for-agents",
+  "arm": "A",
+  "s": "s2",
+  "first": "init",
+  "all": [
+   "init"
+  ],
+  "usage": 10918,
+  "hit": false
+ },
+ {
+  "id": "wfa-1",
+  "fam": "write-for-agents",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:write-for-agents",
+  "all": [
+   "fox-dev:write-for-agents"
+  ],
+  "usage": 8724,
+  "hit": true
+ },
+ {
+  "id": "wfa-1",
+  "fam": "write-for-agents",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:write-for-agents",
+  "all": [
+   "fox-dev:write-for-agents"
+  ],
+  "usage": 8724,
+  "hit": true
+ },
+ {
+  "id": "wfa-2",
+  "fam": "write-for-agents",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10925,
+  "hit": false
+ },
+ {
+  "id": "wfa-2",
+  "fam": "write-for-agents",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10925,
+  "hit": false
+ },
+ {
+  "id": "wfa-2",
+  "fam": "write-for-agents",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:write-for-agents",
+  "all": [
+   "fox-dev:write-for-agents"
+  ],
+  "usage": 8731,
+  "hit": true
+ },
+ {
+  "id": "wfa-2",
+  "fam": "write-for-agents",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:write-for-agents",
+  "all": [
+   "fox-dev:write-for-agents"
+  ],
+  "usage": 8731,
+  "hit": true
+ }
+]

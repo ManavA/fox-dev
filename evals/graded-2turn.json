@@ -1,0 +1,1428 @@
+[
+ {
+  "id": "build-1",
+  "fam": "build",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10931,
+  "hit": false
+ },
+ {
+  "id": "build-1",
+  "fam": "build",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10931,
+  "hit": false
+ },
+ {
+  "id": "build-1",
+  "fam": "build",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8737,
+  "hit": false
+ },
+ {
+  "id": "build-1",
+  "fam": "build",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8737,
+  "hit": false
+ },
+ {
+  "id": "build-2",
+  "fam": "build",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10968,
+  "hit": false
+ },
+ {
+  "id": "build-2",
+  "fam": "build",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10968,
+  "hit": false
+ },
+ {
+  "id": "build-2",
+  "fam": "build",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8774,
+  "hit": false
+ },
+ {
+  "id": "build-2",
+  "fam": "build",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8774,
+  "hit": false
+ },
+ {
+  "id": "ctl-1",
+  "fam": "none",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10915,
+  "hit": null
+ },
+ {
+  "id": "ctl-1",
+  "fam": "none",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10915,
+  "hit": null
+ },
+ {
+  "id": "ctl-1",
+  "fam": "none",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8721,
+  "hit": null
+ },
+ {
+  "id": "ctl-1",
+  "fam": "none",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8721,
+  "hit": null
+ },
+ {
+  "id": "ctl-2",
+  "fam": "none",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10935,
+  "hit": null
+ },
+ {
+  "id": "ctl-2",
+  "fam": "none",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10935,
+  "hit": null
+ },
+ {
+  "id": "ctl-2",
+  "fam": "none",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8741,
+  "hit": null
+ },
+ {
+  "id": "ctl-2",
+  "fam": "none",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8741,
+  "hit": null
+ },
+ {
+  "id": "ctl-3",
+  "fam": "none",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10923,
+  "hit": null
+ },
+ {
+  "id": "ctl-3",
+  "fam": "none",
+  "arm": "A",
+  "s": "s2",
+  "first": "superpowers:using-superpowers",
+  "all": [
+   "superpowers:using-superpowers"
+  ],
+  "usage": 10923,
+  "hit": null
+ },
+ {
+  "id": "ctl-3",
+  "fam": "none",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8729,
+  "hit": null
+ },
+ {
+  "id": "ctl-3",
+  "fam": "none",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8729,
+  "hit": null
+ },
+ {
+  "id": "ctl-4",
+  "fam": "none",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10914,
+  "hit": null
+ },
+ {
+  "id": "ctl-4",
+  "fam": "none",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10914,
+  "hit": null
+ },
+ {
+  "id": "ctl-4",
+  "fam": "none",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8720,
+  "hit": null
+ },
+ {
+  "id": "ctl-4",
+  "fam": "none",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8720,
+  "hit": null
+ },
+ {
+  "id": "ctl-5",
+  "fam": "none",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10910,
+  "hit": null
+ },
+ {
+  "id": "ctl-5",
+  "fam": "none",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10910,
+  "hit": null
+ },
+ {
+  "id": "ctl-5",
+  "fam": "none",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8716,
+  "hit": null
+ },
+ {
+  "id": "ctl-5",
+  "fam": "none",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8716,
+  "hit": null
+ },
+ {
+  "id": "ctl-6",
+  "fam": "none",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10919,
+  "hit": null
+ },
+ {
+  "id": "ctl-6",
+  "fam": "none",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10919,
+  "hit": null
+ },
+ {
+  "id": "ctl-6",
+  "fam": "none",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8725,
+  "hit": null
+ },
+ {
+  "id": "ctl-6",
+  "fam": "none",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8725,
+  "hit": null
+ },
+ {
+  "id": "ctl-7",
+  "fam": "none",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10926,
+  "hit": null
+ },
+ {
+  "id": "ctl-7",
+  "fam": "none",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10926,
+  "hit": null
+ },
+ {
+  "id": "ctl-7",
+  "fam": "none",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8732,
+  "hit": null
+ },
+ {
+  "id": "ctl-7",
+  "fam": "none",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8732,
+  "hit": null
+ },
+ {
+  "id": "ctl-8",
+  "fam": "none",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10913,
+  "hit": null
+ },
+ {
+  "id": "ctl-8",
+  "fam": "none",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10913,
+  "hit": null
+ },
+ {
+  "id": "ctl-8",
+  "fam": "none",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8719,
+  "hit": null
+ },
+ {
+  "id": "ctl-8",
+  "fam": "none",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8719,
+  "hit": null
+ },
+ {
+  "id": "debug-1",
+  "fam": "debug",
+  "arm": "A",
+  "s": "s1",
+  "first": "superpowers:systematic-debugging",
+  "all": [
+   "superpowers:systematic-debugging"
+  ],
+  "usage": 10941,
+  "hit": true
+ },
+ {
+  "id": "debug-1",
+  "fam": "debug",
+  "arm": "A",
+  "s": "s2",
+  "first": "superpowers:systematic-debugging",
+  "all": [
+   "superpowers:systematic-debugging"
+  ],
+  "usage": 10941,
+  "hit": true
+ },
+ {
+  "id": "debug-1",
+  "fam": "debug",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:debug",
+  "all": [
+   "fox-dev:debug"
+  ],
+  "usage": 8747,
+  "hit": true
+ },
+ {
+  "id": "debug-1",
+  "fam": "debug",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:debug",
+  "all": [
+   "fox-dev:debug"
+  ],
+  "usage": 8747,
+  "hit": true
+ },
+ {
+  "id": "debug-2",
+  "fam": "debug",
+  "arm": "A",
+  "s": "s1",
+  "first": "superpowers:systematic-debugging",
+  "all": [
+   "superpowers:systematic-debugging"
+  ],
+  "usage": 10967,
+  "hit": true
+ },
+ {
+  "id": "debug-2",
+  "fam": "debug",
+  "arm": "A",
+  "s": "s2",
+  "first": "superpowers:systematic-debugging",
+  "all": [
+   "superpowers:systematic-debugging"
+  ],
+  "usage": 10967,
+  "hit": true
+ },
+ {
+  "id": "debug-2",
+  "fam": "debug",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:debug",
+  "all": [
+   "fox-dev:debug"
+  ],
+  "usage": 8773,
+  "hit": true
+ },
+ {
+  "id": "debug-2",
+  "fam": "debug",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:debug",
+  "all": [
+   "fox-dev:debug"
+  ],
+  "usage": 8773,
+  "hit": true
+ },
+ {
+  "id": "design-1",
+  "fam": "design",
+  "arm": "A",
+  "s": "s1",
+  "first": "mattpocock-skills:codebase-design",
+  "all": [
+   "mattpocock-skills:codebase-design"
+  ],
+  "usage": 10946,
+  "hit": true
+ },
+ {
+  "id": "design-1",
+  "fam": "design",
+  "arm": "A",
+  "s": "s2",
+  "first": "mattpocock-skills:codebase-design",
+  "all": [
+   "mattpocock-skills:codebase-design"
+  ],
+  "usage": 10946,
+  "hit": true
+ },
+ {
+  "id": "design-1",
+  "fam": "design",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:design",
+  "all": [
+   "fox-dev:design"
+  ],
+  "usage": 8752,
+  "hit": true
+ },
+ {
+  "id": "design-1",
+  "fam": "design",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:design",
+  "all": [
+   "fox-dev:design"
+  ],
+  "usage": 8752,
+  "hit": true
+ },
+ {
+  "id": "design-2",
+  "fam": "design",
+  "arm": "A",
+  "s": "s1",
+  "first": "mattpocock-skills:domain-modeling",
+  "all": [
+   "mattpocock-skills:domain-modeling"
+  ],
+  "usage": 10939,
+  "hit": true
+ },
+ {
+  "id": "design-2",
+  "fam": "design",
+  "arm": "A",
+  "s": "s2",
+  "first": "mattpocock-skills:domain-modeling",
+  "all": [
+   "mattpocock-skills:domain-modeling"
+  ],
+  "usage": 10939,
+  "hit": true
+ },
+ {
+  "id": "design-2",
+  "fam": "design",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:design",
+  "all": [
+   "fox-dev:design"
+  ],
+  "usage": 8745,
+  "hit": true
+ },
+ {
+  "id": "design-2",
+  "fam": "design",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:design",
+  "all": [
+   "fox-dev:design"
+  ],
+  "usage": 8745,
+  "hit": true
+ },
+ {
+  "id": "handoff-1",
+  "fam": "handoff",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10922,
+  "hit": false
+ },
+ {
+  "id": "handoff-1",
+  "fam": "handoff",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10922,
+  "hit": false
+ },
+ {
+  "id": "handoff-1",
+  "fam": "handoff",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8728,
+  "hit": false
+ },
+ {
+  "id": "handoff-1",
+  "fam": "handoff",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8728,
+  "hit": false
+ },
+ {
+  "id": "handoff-2",
+  "fam": "handoff",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10925,
+  "hit": false
+ },
+ {
+  "id": "handoff-2",
+  "fam": "handoff",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10925,
+  "hit": false
+ },
+ {
+  "id": "handoff-2",
+  "fam": "handoff",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8731,
+  "hit": false
+ },
+ {
+  "id": "handoff-2",
+  "fam": "handoff",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8731,
+  "hit": false
+ },
+ {
+  "id": "plan-1",
+  "fam": "plan",
+  "arm": "A",
+  "s": "s1",
+  "first": "superpowers:writing-plans",
+  "all": [
+   "superpowers:writing-plans"
+  ],
+  "usage": 10938,
+  "hit": true
+ },
+ {
+  "id": "plan-1",
+  "fam": "plan",
+  "arm": "A",
+  "s": "s2",
+  "first": "superpowers:writing-plans",
+  "all": [
+   "superpowers:writing-plans"
+  ],
+  "usage": 10938,
+  "hit": true
+ },
+ {
+  "id": "plan-1",
+  "fam": "plan",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:plan",
+  "all": [
+   "fox-dev:plan"
+  ],
+  "usage": 8744,
+  "hit": true
+ },
+ {
+  "id": "plan-1",
+  "fam": "plan",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:plan",
+  "all": [
+   "fox-dev:plan"
+  ],
+  "usage": 8744,
+  "hit": true
+ },
+ {
+  "id": "plan-2",
+  "fam": "plan",
+  "arm": "A",
+  "s": "s1",
+  "first": "superpowers:writing-plans",
+  "all": [
+   "superpowers:writing-plans"
+  ],
+  "usage": 10946,
+  "hit": true
+ },
+ {
+  "id": "plan-2",
+  "fam": "plan",
+  "arm": "A",
+  "s": "s2",
+  "first": "superpowers:writing-plans",
+  "all": [
+   "superpowers:writing-plans"
+  ],
+  "usage": 10946,
+  "hit": true
+ },
+ {
+  "id": "plan-2",
+  "fam": "plan",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:plan",
+  "all": [
+   "fox-dev:plan"
+  ],
+  "usage": 8752,
+  "hit": true
+ },
+ {
+  "id": "plan-2",
+  "fam": "plan",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:plan",
+  "all": [
+   "fox-dev:plan"
+  ],
+  "usage": 8752,
+  "hit": true
+ },
+ {
+  "id": "research-1",
+  "fam": "research",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10941,
+  "hit": false
+ },
+ {
+  "id": "research-1",
+  "fam": "research",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10941,
+  "hit": false
+ },
+ {
+  "id": "research-1",
+  "fam": "research",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:research",
+  "all": [
+   "fox-dev:research"
+  ],
+  "usage": 8747,
+  "hit": true
+ },
+ {
+  "id": "research-1",
+  "fam": "research",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:research",
+  "all": [
+   "fox-dev:research"
+  ],
+  "usage": 8747,
+  "hit": true
+ },
+ {
+  "id": "research-2",
+  "fam": "research",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10936,
+  "hit": false
+ },
+ {
+  "id": "research-2",
+  "fam": "research",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10936,
+  "hit": false
+ },
+ {
+  "id": "research-2",
+  "fam": "research",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:research",
+  "all": [
+   "fox-dev:research"
+  ],
+  "usage": 8742,
+  "hit": true
+ },
+ {
+  "id": "research-2",
+  "fam": "research",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:research",
+  "all": [
+   "fox-dev:research"
+  ],
+  "usage": 8742,
+  "hit": true
+ },
+ {
+  "id": "review-1",
+  "fam": "review",
+  "arm": "A",
+  "s": "s1",
+  "first": "mattpocock-skills:code-review",
+  "all": [
+   "mattpocock-skills:code-review"
+  ],
+  "usage": 10906,
+  "hit": true
+ },
+ {
+  "id": "review-1",
+  "fam": "review",
+  "arm": "A",
+  "s": "s2",
+  "first": "mattpocock-skills:code-review",
+  "all": [
+   "mattpocock-skills:code-review"
+  ],
+  "usage": 10906,
+  "hit": true
+ },
+ {
+  "id": "review-1",
+  "fam": "review",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:review",
+  "all": [
+   "fox-dev:review"
+  ],
+  "usage": 8712,
+  "hit": true
+ },
+ {
+  "id": "review-1",
+  "fam": "review",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:review",
+  "all": [
+   "fox-dev:review"
+  ],
+  "usage": 8712,
+  "hit": true
+ },
+ {
+  "id": "review-2",
+  "fam": "review",
+  "arm": "A",
+  "s": "s1",
+  "first": "superpowers:requesting-code-review",
+  "all": [
+   "superpowers:requesting-code-review"
+  ],
+  "usage": 10932,
+  "hit": true
+ },
+ {
+  "id": "review-2",
+  "fam": "review",
+  "arm": "A",
+  "s": "s2",
+  "first": "code-review",
+  "all": [
+   "code-review"
+  ],
+  "usage": 10932,
+  "hit": false
+ },
+ {
+  "id": "review-2",
+  "fam": "review",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:review",
+  "all": [
+   "fox-dev:review"
+  ],
+  "usage": 8738,
+  "hit": true
+ },
+ {
+  "id": "review-2",
+  "fam": "review",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:review",
+  "all": [
+   "fox-dev:review"
+  ],
+  "usage": 8738,
+  "hit": true
+ },
+ {
+  "id": "shape-1",
+  "fam": "shape",
+  "arm": "A",
+  "s": "s1",
+  "first": "superpowers:brainstorming",
+  "all": [
+   "superpowers:brainstorming"
+  ],
+  "usage": 10912,
+  "hit": true
+ },
+ {
+  "id": "shape-1",
+  "fam": "shape",
+  "arm": "A",
+  "s": "s2",
+  "first": "superpowers:brainstorming",
+  "all": [
+   "superpowers:brainstorming"
+  ],
+  "usage": 10912,
+  "hit": true
+ },
+ {
+  "id": "shape-1",
+  "fam": "shape",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8718,
+  "hit": false
+ },
+ {
+  "id": "shape-1",
+  "fam": "shape",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8718,
+  "hit": false
+ },
+ {
+  "id": "shape-2",
+  "fam": "shape",
+  "arm": "A",
+  "s": "s1",
+  "first": "mattpocock-skills:grilling",
+  "all": [
+   "mattpocock-skills:grilling"
+  ],
+  "usage": 10927,
+  "hit": true
+ },
+ {
+  "id": "shape-2",
+  "fam": "shape",
+  "arm": "A",
+  "s": "s2",
+  "first": "mattpocock-skills:grilling",
+  "all": [
+   "mattpocock-skills:grilling"
+  ],
+  "usage": 10927,
+  "hit": true
+ },
+ {
+  "id": "shape-2",
+  "fam": "shape",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:shape",
+  "all": [
+   "fox-dev:shape"
+  ],
+  "usage": 8733,
+  "hit": true
+ },
+ {
+  "id": "shape-2",
+  "fam": "shape",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:shape",
+  "all": [
+   "fox-dev:shape"
+  ],
+  "usage": 8733,
+  "hit": true
+ },
+ {
+  "id": "ship-1",
+  "fam": "ship",
+  "arm": "A",
+  "s": "s1",
+  "first": "superpowers:finishing-a-development-branch",
+  "all": [
+   "superpowers:finishing-a-development-branch"
+  ],
+  "usage": 10911,
+  "hit": true
+ },
+ {
+  "id": "ship-1",
+  "fam": "ship",
+  "arm": "A",
+  "s": "s2",
+  "first": "mattpocock-skills:pr",
+  "all": [
+   "mattpocock-skills:pr"
+  ],
+  "usage": 10911,
+  "hit": true
+ },
+ {
+  "id": "ship-1",
+  "fam": "ship",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:ship",
+  "all": [
+   "fox-dev:ship",
+   "fox-dev:verify"
+  ],
+  "usage": 8717,
+  "hit": true
+ },
+ {
+  "id": "ship-1",
+  "fam": "ship",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:ship",
+  "all": [
+   "fox-dev:ship",
+   "fox-dev:verify"
+  ],
+  "usage": 8717,
+  "hit": true
+ },
+ {
+  "id": "ship-2",
+  "fam": "ship",
+  "arm": "A",
+  "s": "s1",
+  "first": "mattpocock-skills:pr",
+  "all": [
+   "mattpocock-skills:pr"
+  ],
+  "usage": 10918,
+  "hit": true
+ },
+ {
+  "id": "ship-2",
+  "fam": "ship",
+  "arm": "A",
+  "s": "s2",
+  "first": "mattpocock-skills:pr",
+  "all": [
+   "mattpocock-skills:pr"
+  ],
+  "usage": 10918,
+  "hit": true
+ },
+ {
+  "id": "ship-2",
+  "fam": "ship",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:ship",
+  "all": [
+   "fox-dev:ship",
+   "fox-dev:verify"
+  ],
+  "usage": 8724,
+  "hit": true
+ },
+ {
+  "id": "ship-2",
+  "fam": "ship",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:ship",
+  "all": [
+   "fox-dev:ship",
+   "fox-dev:verify"
+  ],
+  "usage": 8724,
+  "hit": true
+ },
+ {
+  "id": "swarm-1",
+  "fam": "swarm",
+  "arm": "A",
+  "s": "s1",
+  "first": "superpowers:dispatching-parallel-agents",
+  "all": [
+   "superpowers:dispatching-parallel-agents"
+  ],
+  "usage": 10955,
+  "hit": true
+ },
+ {
+  "id": "swarm-1",
+  "fam": "swarm",
+  "arm": "A",
+  "s": "s2",
+  "first": "superpowers:dispatching-parallel-agents",
+  "all": [
+   "superpowers:dispatching-parallel-agents"
+  ],
+  "usage": 10955,
+  "hit": true
+ },
+ {
+  "id": "swarm-1",
+  "fam": "swarm",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 8761,
+  "hit": false
+ },
+ {
+  "id": "swarm-1",
+  "fam": "swarm",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 8761,
+  "hit": false
+ },
+ {
+  "id": "swarm-2",
+  "fam": "swarm",
+  "arm": "A",
+  "s": "s1",
+  "first": "superpowers:dispatching-parallel-agents",
+  "all": [
+   "superpowers:dispatching-parallel-agents"
+  ],
+  "usage": 10933,
+  "hit": true
+ },
+ {
+  "id": "swarm-2",
+  "fam": "swarm",
+  "arm": "A",
+  "s": "s2",
+  "first": "superpowers:dispatching-parallel-agents",
+  "all": [
+   "superpowers:dispatching-parallel-agents"
+  ],
+  "usage": 10933,
+  "hit": true
+ },
+ {
+  "id": "swarm-2",
+  "fam": "swarm",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:swarm",
+  "all": [
+   "fox-dev:swarm"
+  ],
+  "usage": 8739,
+  "hit": true
+ },
+ {
+  "id": "swarm-2",
+  "fam": "swarm",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:swarm",
+  "all": [
+   "fox-dev:swarm"
+  ],
+  "usage": 8739,
+  "hit": true
+ },
+ {
+  "id": "verify-1",
+  "fam": "verify",
+  "arm": "A",
+  "s": "s1",
+  "first": "superpowers:verification-before-completion",
+  "all": [
+   "superpowers:verification-before-completion"
+  ],
+  "usage": 10930,
+  "hit": true
+ },
+ {
+  "id": "verify-1",
+  "fam": "verify",
+  "arm": "A",
+  "s": "s2",
+  "first": "superpowers:verification-before-completion",
+  "all": [
+   "superpowers:verification-before-completion"
+  ],
+  "usage": 10930,
+  "hit": true
+ },
+ {
+  "id": "verify-1",
+  "fam": "verify",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:verify",
+  "all": [
+   "fox-dev:verify"
+  ],
+  "usage": 8736,
+  "hit": true
+ },
+ {
+  "id": "verify-1",
+  "fam": "verify",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:verify",
+  "all": [
+   "fox-dev:verify"
+  ],
+  "usage": 8736,
+  "hit": true
+ },
+ {
+  "id": "verify-2",
+  "fam": "verify",
+  "arm": "A",
+  "s": "s1",
+  "first": "superpowers:verification-before-completion",
+  "all": [
+   "superpowers:verification-before-completion"
+  ],
+  "usage": 10934,
+  "hit": true
+ },
+ {
+  "id": "verify-2",
+  "fam": "verify",
+  "arm": "A",
+  "s": "s2",
+  "first": "superpowers:verification-before-completion",
+  "all": [
+   "superpowers:verification-before-completion"
+  ],
+  "usage": 10934,
+  "hit": true
+ },
+ {
+  "id": "verify-2",
+  "fam": "verify",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:verify",
+  "all": [
+   "fox-dev:verify"
+  ],
+  "usage": 8740,
+  "hit": true
+ },
+ {
+  "id": "verify-2",
+  "fam": "verify",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:verify",
+  "all": [
+   "fox-dev:verify"
+  ],
+  "usage": 8740,
+  "hit": true
+ },
+ {
+  "id": "wfa-1",
+  "fam": "write-for-agents",
+  "arm": "A",
+  "s": "s1",
+  "first": "init",
+  "all": [
+   "init"
+  ],
+  "usage": 10918,
+  "hit": false
+ },
+ {
+  "id": "wfa-1",
+  "fam": "write-for-agents",
+  "arm": "A",
+  "s": "s2",
+  "first": "init",
+  "all": [
+   "init"
+  ],
+  "usage": 10918,
+  "hit": false
+ },
+ {
+  "id": "wfa-1",
+  "fam": "write-for-agents",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:write-for-agents",
+  "all": [
+   "fox-dev:write-for-agents"
+  ],
+  "usage": 8724,
+  "hit": true
+ },
+ {
+  "id": "wfa-1",
+  "fam": "write-for-agents",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:write-for-agents",
+  "all": [
+   "fox-dev:write-for-agents"
+  ],
+  "usage": 8724,
+  "hit": true
+ },
+ {
+  "id": "wfa-2",
+  "fam": "write-for-agents",
+  "arm": "A",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 10925,
+  "hit": false
+ },
+ {
+  "id": "wfa-2",
+  "fam": "write-for-agents",
+  "arm": "A",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 10925,
+  "hit": false
+ },
+ {
+  "id": "wfa-2",
+  "fam": "write-for-agents",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:write-for-agents",
+  "all": [
+   "fox-dev:write-for-agents"
+  ],
+  "usage": 8731,
+  "hit": true
+ },
+ {
+  "id": "wfa-2",
+  "fam": "write-for-agents",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:write-for-agents",
+  "all": [
+   "fox-dev:write-for-agents"
+  ],
+  "usage": 8731,
+  "hit": true
+ }
+]
