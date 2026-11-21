@@ -1,0 +1,17 @@
+{
+  "name": "fox-dev",
+  "owner": { "name": "ManavA" },
+  "metadata": {
+    "description": "One small dev-loop skill pack: shape, plan, build test-first, review, verify, ship.",
+    "version": "0.1.0-draft"
+  },
+  "plugins": [
+    {
+      "name": "fox-dev",
+      "source": "./plugin",
+      "description": "Dev-loop skills merged from mattpocock-skills, superpowers and agent-skills: shape, design, plan, build, swarm, debug, review, verify, ship, handoff, research, write-for-agents.",
+      "version": "0.1.0-draft",
+      "license": "MIT"
+    }
+  ]
+}

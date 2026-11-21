@@ -1,0 +1,8 @@
+{
+  "name": "fox-dev",
+  "version": "0.1.0-draft",
+  "description": "Dev-loop skills: shape, design, plan, build test-first, swarm, debug, review, verify, ship, handoff, research, write-for-agents.",
+  "author": { "name": "ManavA" },
+  "license": "MIT",
+  "keywords": ["tdd", "code-review", "planning", "debugging", "workflow"]
+}
