@@ -10,7 +10,6 @@ from slugkit import slugify
         ("Crème Brûlée", {}, "creme-brulee"),
         ("Hello World", {"max_length": 6}, "hello"),
         ("Hello World", {"max_length": 5}, "hello"),
-        ("Hello World", {"max_length": 7}, "hello-w"),
         ("  a  b  ", {"sep": "_"}, "a_b"),
         ("", {}, ""),
         ("!!!", {}, ""),

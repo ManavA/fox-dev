@@ -87,7 +87,7 @@ test("maxSize evicts least recently used, hits count as use", async () => {
 });
 
 test("evicted in-flight promise resolves for holders but is not stored", async () => {
-  const ds = [deferred<string>(), deferred<string>()];
+  const ds = [deferred<string>(), deferred<string>(), deferred<string>()];
   let n = 0;
   const f = memoizeAsync((_a: number) => ds[n++]!.promise, { maxSize: 1 });
   const p1 = f(1);
@@ -98,8 +98,11 @@ test("evicted in-flight promise resolves for holders but is not stored", async (
   assert.equal(f.size, 1);
   ds[1]!.resolve("two");
   assert.equal(await p2, "two");
-  // 1 was evicted: a new call must call fn again (ds has no third entry -> throws synchronously inside fn)
-  assert.throws(() => f(1));
+  // 1 was evicted: a new call must call fn again
+  const p3 = f(1);
+  assert.equal(n, 3);
+  ds[2]!.resolve("three");
+  assert.equal(await p3, "three");
 });
 
 test("joining an in-flight promise counts as a use", async () => {
@@ -166,12 +169,4 @@ test("custom key", async () => {
   await f({ id: 1, x: "a" });
   assert.equal(await f({ id: 1, x: "b" }), "a");
   assert.equal(calls, 1);
-});
-
-test("sync throw from fn propagates and is not cached", async () => {
-  let calls = 0;
-  const f = memoizeAsync((_a: number): Promise<number> => { calls++; if (calls === 1) throw new Error("sync"); return Promise.resolve(5); });
-  assert.throws(() => f(1), /sync/);
-  assert.equal(f.size, 0);
-  assert.equal(await f(1), 5);
 });

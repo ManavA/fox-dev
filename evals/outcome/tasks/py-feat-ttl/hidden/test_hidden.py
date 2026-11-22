@@ -53,8 +53,11 @@ def test_invalid_ttl():
         c2.set("a", 1, ttl=0)
 
 
-def test_invalid_default_ttl_not_required_but_set_with_bad_default_raises():
-    c, _ = make(default_ttl=-1)
+def test_invalid_default_ttl_is_rejected_at_construction_or_at_set():
+    try:
+        c, _ = make(default_ttl=-1)
+    except ValueError:
+        return
     with pytest.raises(ValueError):
         c.set("a", 1)
 

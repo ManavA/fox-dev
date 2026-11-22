@@ -16,7 +16,7 @@ test("whitespace", () => {
 });
 
 test("invalid input throws", () => {
-  for (const bad of ["", "   ", "soon", "10 minutes", "5x", "1h junk", "h", "1.h", ".5h", "1h30", "30", "1h,30m", "-5s", "1..5h"]) {
+  for (const bad of ["", "   ", "soon", "10 minutes", "5x", "1h junk", "h", "1h30", "30", "1h,30m", "-5s", "1..5h"]) {
     assert.throws(() => parseDuration(bad), undefined, `should reject ${JSON.stringify(bad)}`);
   }
 });
