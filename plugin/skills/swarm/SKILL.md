@@ -1,6 +1,6 @@
 ---
 name: swarm
-description: Runs independent tasks in parallel with one writer per change and fresh reviewers. Use when a plan has 2+ independent tasks or several unrelated failures, even when doing them one by one looks simpler.
+description: Runs independent tasks in parallel with one writer per change and fresh reviewers. Use when facing 2+ independent tasks or failures, e.g. "do these three unrelated chores in parallel" or "run separate agents on each failure", even when it looks quick to do directly or one by one.
 ---
 
 # Swarm

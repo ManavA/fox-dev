@@ -1,6 +1,6 @@
 ---
 name: shape
-description: Turns an idea or change request into an agreed spec. Use when asked to build, add or change a feature, or on "grill me", "interview me", "spec this", "let's design", even when the request looks clear enough to start coding directly.
+description: Turns an idea or change request into an agreed spec. Use BEFORE exploring code or writing any code when asked to add, build or change a feature or behaviour (e.g. "add a rate limiter to this API"), or on "grill me", "interview me", "spec this", even when it looks quick to do directly.
 ---
 
 # Shape

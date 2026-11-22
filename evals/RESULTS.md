@@ -37,6 +37,19 @@ First-request prompt size (input + cache read + cache write, median over 64 runs
 ## Supplement with --max-turns 6
 The 12 cases with a miss in either arm were rerun with 6 turns (2 samples; graded-6turn.json). It does not change the picture: build and handoff stay at 0 in both arms, B shape-1 stays at 0, B swarm-1 stays at 0, A research stays at 0; A review-2 goes to the built-in `code-review` both times.
 
+## Description rewrite for shape and swarm (re-run, arm B only)
+Both descriptions were rewritten to name the missed situations: shape now says to use it BEFORE exploring or writing code when asked to add, build or change a feature or behaviour (example "add a rate limiter to this API"); swarm now names "do these three unrelated chores in parallel" and "run separate agents on each failure". Both keep the "even when it looks quick to do directly" clause. No other skill was touched.
+The scratch repo was recreated from scratch for this re-run (same case prompts, same driver with a new `--arms B` option, 2 samples, Sonnet), so the sample repo is similar but not identical to the first run.
+
+| family | B before | B after |
+|---|---|---|
+| shape | 2/4 | 4/4 |
+| swarm | 2/4 | 4/4 |
+| controls (false fires) | 0/16 | 0/16 |
+| overall (full arm-B run) | 36/48 | 38/48 |
+
+In the full arm-B re-run, plan fell from 4/4 to 2/4 (plan-2 "migrate ITEMS to sqlite" fired nothing both times, 2 samples); the plan description was not changed, so this is probably sample-repo or run-to-run noise, but it is unconfirmed. build and handoff stay at 0/4 as before. Cost of the re-runs about $1.15.
+
 ## Caveats
 - Only the first Skill call is graded; later calls are ignored. Tools were limited, so build prompts could not edit anything.
 - The sample branch already contains the paginate fix, so build-2 (fix paginate) is partly confounded.
