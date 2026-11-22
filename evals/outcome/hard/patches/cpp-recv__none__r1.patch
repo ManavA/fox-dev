@@ -1,0 +1,894 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 9fb62ad..fc20bfd 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -2,6 +2,7 @@
+ 
+ ## Unreleased
+ 
++- C++ member calls resolve through the receiver's type: a local (`Engine e;`), a parameter (`Pump* p`, `const Pump& p`), a member of a typed struct (`b.engine.start()`, a bare member name or `this->` inside a method of its class), `auto e = Engine();`, `auto p = std::make_unique<Pump>();` (also `make_shared`, `new`, casts, smart pointers, `using` aliases, range-for variables and a function's return type) reach the right class's method with certainty, so `callers` of `Engine.start` no longer marks them as guesses among every class with a `start`. A receiver whose type cannot be told, or a class that does not define the method itself (it inherits it), stays a guess by name. Functions and methods returning a pointer or reference and `using` aliases are indexed. Schema 25; C++ files re-parse once.
+ - `callers` of a C function-pointer member lists the lines storing a function in it (`.irq_mask = foo_mask,`) as their own group after the call sites, `stores a function in it (not calls): N`, no longer among the references that are not calls, and they no longer make the answer read as incomplete. `callers` of a function counts the documentation lines naming it after the verdict (`plus N in docs (not code, not listed)`) and never lists them.
+ - The SubagentStart brief no longer carries the swarm board protocol line by default: in A/B runs it gave parallel subagents nothing and cost more. `[hooks] swarm_board = true` in `config.toml` brings it back. The parent packet and parent read lines stay.
+ 
+diff --git a/docs/architecture.md b/docs/architecture.md
+index f005206..e4f53cc 100644
+--- a/docs/architecture.md
++++ b/docs/architecture.md
+@@ -25,6 +25,8 @@ members, and those whose type path passes through a field or function whose type
+ type path when a typedef changed). A run that re-parses most of a big project drops the old rows
+ in one pass per table and resolves everything again.
+ 
++**C++ member calls.** A C++ call through a receiver (`e.start()`, `p->start()`, `b.engine.start()`) stores the receiver the same way as a type path with the class as `Q:Engine` (`ts_ref.rtype`, `Q:Boat|engine|start`): the declared type of a local, parameter (value, pointer, reference, `const`), file-level variable or field (smart pointers `unique_ptr`/`shared_ptr` name their argument), the type an `auto` initializer builds (`Engine()`, `new Engine`, `Engine{}`, `std::make_unique<Pump>()`, a cast), a function's return type, and, inside a method, a bare name no scope declares (a member of its class) and `this`. Fields give the next class, through typedefs and `using` aliases. When the path ends in a class that defines the method itself (a class that only inherits it falls back to name scoring), the call goes to that class's method and no other, certain; overloads of one class are one target, same-name classes in two namespaces a guess. Any other receiver stays a guess by name. Members of a struct in a `.h` file (parsed as C) type paths too. Schema 25.
++
+ **Change detection on big trees** (`walkcache`). A tree of at least 50,000 files keeps its last
+ walk in `$FOXDB_HOME/walk/<project id>`: the directories it entered with their modification
+ times (nanoseconds), the files in each with size and mtime, the notes on directories it left out,
+diff --git a/languages/cpp.scm b/languages/cpp.scm
+index 888a571..9fa57ad 100644
+--- a/languages/cpp.scm
++++ b/languages/cpp.scm
+@@ -2,11 +2,19 @@
+ (struct_specifier name: (type_identifier) @name body: (_)) @definition.struct
+ (class_specifier name: (type_identifier) @name) @definition.class
+ (namespace_definition name: (namespace_identifier) @name) @definition.module
+-(function_definition declarator: (function_declarator declarator: (identifier) @name)) @definition.function
+-(function_definition declarator: (function_declarator declarator: (field_identifier) @name)) @definition.method
+-(function_definition declarator: (function_declarator declarator: (qualified_identifier scope: (namespace_identifier) @container name: (identifier) @name))) @definition.method
++; A function or method defined with a pointer or reference return type (`Engine& engine() {}`) is one too.
++(function_definition declarator: [(function_declarator declarator: (identifier) @name)
++  (pointer_declarator declarator: (function_declarator declarator: (identifier) @name))
++  (reference_declarator (function_declarator declarator: (identifier) @name))]) @definition.function
++(function_definition declarator: [(function_declarator declarator: (field_identifier) @name)
++  (pointer_declarator declarator: (function_declarator declarator: (field_identifier) @name))
++  (reference_declarator (function_declarator declarator: (field_identifier) @name))]) @definition.method
++(function_definition declarator: [(function_declarator declarator: (qualified_identifier scope: (namespace_identifier) @container name: (identifier) @name))
++  (pointer_declarator declarator: (function_declarator declarator: (qualified_identifier scope: (namespace_identifier) @container name: (identifier) @name)))
++  (reference_declarator (function_declarator declarator: (qualified_identifier scope: (namespace_identifier) @container name: (identifier) @name)))]) @definition.method
+ (field_declaration declarator: (function_declarator declarator: (field_identifier) @name)) @definition.method
+ (type_definition declarator: (type_identifier) @name) @definition.type
++(alias_declaration name: (type_identifier) @name) @definition.type
+ (enum_specifier name: (type_identifier) @name) @definition.enum
+ (call_expression function: (identifier) @name) @reference.call
+ (call_expression function: (field_expression field: (field_identifier) @name)) @reference.call
+diff --git a/src/db.rs b/src/db.rs
+index 089bdb0..9df7862 100644
+--- a/src/db.rs
++++ b/src/db.rs
+@@ -461,6 +461,17 @@ pub(crate) fn migrate(c: &Connection) -> Result<()> {
+              PRAGMA user_version = 24;",
+         )?;
+     }
++    if v < 25 {
++        // C++ member calls resolve by the receiver's declared or inferred type: references keep
++        // its type path (`rtype`, as C does since 23), so C++ files parse again once and their
++        // projects re-score.
++        c.execute_batch(
++            "UPDATE ts_file SET hash = '', size = -1 WHERE lang = 'cpp';
++             INSERT OR REPLACE INTO meta(k, v)
++               SELECT 'rescore:' || p.id, 1 FROM project p WHERE EXISTS (SELECT 1 FROM ts_file f WHERE f.project_id = p.id AND f.lang = 'cpp');
++             PRAGMA user_version = 25;",
++        )?;
++    }
+     // Cheap when already set: the setting lives in each table's own config.
+     for t in MERGE_TABLES {
+         defer_merges(c, t)?;
+@@ -762,7 +773,7 @@ pub fn minority(c: &Connection, ranges: &[(i64, i64)]) -> bool {
+ }
+ 
+ /// The schema version this build writes.
+-pub const LATEST: i64 = 24;
++pub const LATEST: i64 = 25;
+ 
+ /// Read-only connection for the hot paths. None if the store does not exist yet.
+ pub fn open_ro() -> Option<Connection> {
+diff --git a/src/tsindex.rs b/src/tsindex.rs
+index 7faee54..c2e4ad2 100644
+--- a/src/tsindex.rs
++++ b/src/tsindex.rs
+@@ -180,6 +180,121 @@ fn c_type_name(decl: tree_sitter::Node, src: &[u8]) -> Option<String> {
+     n.utf8_text(src).ok().filter(|s| !s.is_empty() && s.len() <= 120).map(|s| format!("{ns}:{s}"))
+ }
+ 
++/// C++ wrappers whose first template argument is the type a receiver reaches (`p->f()` on a
++/// `std::unique_ptr<Pump>` calls `Pump::f`).
++const CPP_SMART: &[&str] = &["unique_ptr", "shared_ptr", "weak_ptr", "scoped_ptr", "auto_ptr", "intrusive_ptr", "optional"];
++
++/// C++ functions that build a value of their first template argument's type, and casts to it.
++const CPP_MAKERS: &[&str] = &[
++    "make_unique",
++    "make_shared",
++    "allocate_shared",
++    "make_unique_for_overwrite",
++    "make_shared_for_overwrite",
++    "static_cast",
++    "dynamic_cast",
++    "reinterpret_cast",
++    "const_cast",
++];
++
++fn node_text(n: tree_sitter::Node, src: &[u8]) -> Option<String> {
++    n.utf8_text(src).ok().filter(|s| !s.is_empty() && s.len() <= 120 && !s.contains('|')).map(str::to_string)
++}
++
++/// C++: the class a type node names, last segment only (`const ns::Pump` -> `Pump`, a smart
++/// pointer to `Pump` -> `Pump`). None for `auto`, primitives and anything else.
++fn cpp_name_of(t: tree_sitter::Node, src: &[u8], depth: usize) -> Option<String> {
++    if depth > 6 {
++        return None;
++    }
++    match t.kind() {
++        "type_identifier" => node_text(t, src),
++        "qualified_identifier" => cpp_name_of(t.child_by_field_name("name")?, src, depth + 1),
++        "struct_specifier" | "class_specifier" | "union_specifier" => node_text(t.child_by_field_name("name")?, src),
++        "type_descriptor" => cpp_name_of(t.child_by_field_name("type")?, src, depth + 1),
++        "template_type" => {
++            let last = cpp_name_of(t.child_by_field_name("name")?, src, depth + 1)?;
++            if CPP_SMART.contains(&last.as_str()) {
++                cpp_name_of(t.child_by_field_name("arguments")?.named_child(0)?, src, depth + 1)
++            } else {
++                Some(last)
++            }
++        }
++        _ => None,
++    }
++}
++
++/// C++: the class named by a call's callee when the call builds a value (`Engine()`,
++/// `ns::Engine()`, `std::make_unique<Pump>()`, `static_cast<Pump*>(p)`), or a function's name
++/// (`make()`), which a class of that name alone makes a type.
++fn cpp_callee_type(f: tree_sitter::Node, src: &[u8]) -> Option<String> {
++    match f.kind() {
++        "identifier" => node_text(f, src),
++        "qualified_identifier" => cpp_callee_type(f.child_by_field_name("name")?, src),
++        "template_function" => {
++            let name = node_text(f.child_by_field_name("name")?, src)?;
++            CPP_MAKERS.contains(&name.as_str()).then(|| cpp_name_of(f.child_by_field_name("arguments")?.named_child(0)?, src, 0)).flatten()
++        }
++        _ => None,
++    }
++}
++
++/// C++: the class an initializer expression builds (see [`cpp_callee_type`]; `new Pump`, `Pump{}`).
++fn cpp_expr_type(e: tree_sitter::Node, src: &[u8]) -> Option<String> {
++    match e.kind() {
++        "call_expression" => cpp_callee_type(e.child_by_field_name("function")?, src),
++        "new_expression" | "compound_literal_expression" | "cast_expression" => cpp_name_of(e.child_by_field_name("type")?, src, 0),
++        "parenthesized_expression" => cpp_expr_type(e.named_child(0)?, src),
++        _ => None,
++    }
++}
++
++/// C++: the type a declaration (or parameter, field, function, typedef) names, as `Q:Pump`.
++fn cpp_type_name(decl: tree_sitter::Node, src: &[u8]) -> Option<String> {
++    cpp_name_of(decl.child_by_field_name("type")?, src, 0).map(|n| format!("Q:{n}"))
++}
++
++/// C++: the type of the variable `name` declared in `decl`; an `auto` one takes the type of its
++/// initializer (`auto p = std::make_unique<Pump>();`).
++fn cpp_decl_type(decl: tree_sitter::Node, name: tree_sitter::Node, anc: &[tree_sitter::Node], src: &[u8]) -> Option<String> {
++    let t = decl.child_by_field_name("type")?;
++    if t.kind() != "placeholder_type_specifier" {
++        return cpp_type_name(decl, src);
++    }
++    let init =
++        anc.iter().rev().take_while(|a| a.id() != decl.id()).find(|a| {
++            a.kind() == "init_declarator" && a.child_by_field_name("declarator").is_some_and(|d| d.end_byte() >= name.end_byte())
++        })?;
++    cpp_expr_type(init.child_by_field_name("value")?, src).map(|n| format!("Q:{n}"))
++}
++
++/// C++: the class a function definition or class body among the ancestors `anc` belongs to
++/// (`void Boat::go()`, a method defined in `struct Boat`): what an unqualified member name and
++/// `this` mean there.
++fn cpp_enclosing_class(anc: &[tree_sitter::Node], src: &[u8]) -> Option<String> {
++    for a in anc.iter().rev() {
++        match a.kind() {
++            "function_definition" => {
++                let mut d = a.child_by_field_name("declarator");
++                while let Some(x) = d.filter(|x| matches!(x.kind(), "pointer_declarator" | "reference_declarator")) {
++                    d = x.child_by_field_name("declarator").or_else(|| x.named_child(x.named_child_count().saturating_sub(1) as u32));
++                }
++                if let Some(q) = d
++                    .filter(|x| x.kind() == "function_declarator")
++                    .and_then(|x| x.child_by_field_name("declarator"))
++                    .filter(|x| x.kind() == "qualified_identifier")
++                    .and_then(|x| x.child_by_field_name("scope"))
++                {
++                    return node_text(q, src).and_then(|t| t.rsplit("::").next().map(str::to_string)).filter(|t| !t.is_empty());
++                }
++            }
++            "class_specifier" | "struct_specifier" | "union_specifier" => return node_text(a.child_by_field_name("name")?, src),
++            _ => {}
++        }
++    }
++    None
++}
++
+ /// Longest receiver chain kept for a C member call (`a->b.c->d`).
+ const C_CHAIN_MAX: usize = 8;
+ 
+@@ -187,23 +302,41 @@ const C_CHAIN_MAX: usize = 8;
+ /// `T:typedef`, when the base's type is declared or cast, `F:fn` for a call's return value,
+ /// `V:name` for a name of unknown type) and the fields read on the way, joined by `|`:
+ /// `inode->i_mapping->a_ops` with a parameter `struct inode *inode` is `S:inode|i_mapping|a_ops`.
++///
++/// C++ paths read the same way with the type as `Q:Class` (one namespace for classes, structs and
++/// typedefs); a bare name that no scope declares inside a method is a member of its class
++/// (`Q:Boat|engine`), as is `this` (`Q:Boat`).
+ fn c_chain(e: tree_sitter::Node, walk: &Walk, src: &[u8], depth: usize) -> Option<String> {
+     if depth > C_CHAIN_MAX {
+         return None;
+     }
+-    let text = |n: tree_sitter::Node| n.utf8_text(src).ok().filter(|t| !t.is_empty() && t.len() <= 120).map(str::to_string);
++    let text = |n: tree_sitter::Node| node_text(n, src);
+     match e.kind() {
+-        "identifier" => Some(walk.recv_types.get(&e.start_byte()).cloned().unwrap_or_else(|| format!("V:{}", text(e).unwrap_or_default()))),
++        "identifier" => Some(match walk.recv_types.get(&e.start_byte()) {
++            Some(t) => t.clone(),
++            None => match walk.implicit.get(&e.start_byte()) {
++                Some(c) => format!("Q:{c}|{}", text(e)?),
++                None => format!("V:{}", text(e).unwrap_or_default()),
++            },
++        }),
++        "this" if walk.cpp => walk.implicit.get(&e.start_byte()).map(|c| format!("Q:{c}")),
+         "field_expression" => {
+             let base = c_chain(e.child_by_field_name("argument")?, walk, src, depth + 1)?;
+             Some(format!("{base}|{}", text(e.child_by_field_name("field")?)?))
+         }
+         "parenthesized_expression" => c_chain(e.named_child(0)?, walk, src, depth + 1),
+         "pointer_expression" | "subscript_expression" => c_chain(e.child_by_field_name("argument")?, walk, src, depth + 1),
++        "cast_expression" if walk.cpp => cpp_expr_type(e, src).map(|n| format!("Q:{n}")),
+         "cast_expression" => c_type_name(e.child_by_field_name("type")?, src),
+         "call_expression" => {
+             let f = e.child_by_field_name("function")?;
+-            (f.kind() == "identifier").then(|| text(f).map(|t| format!("F:{t}"))).flatten()
++            if f.kind() == "identifier" {
++                text(f).map(|t| format!("F:{t}"))
++            } else if walk.cpp {
++                cpp_expr_type(e, src).map(|n| format!("Q:{n}"))
++            } else {
++                None
++            }
+         }
+         _ => None,
+     }
+@@ -286,13 +419,13 @@ fn is_ident(k: &str) -> bool {
+ }
+ 
+ /// Nodes that open a scope for parameters and locals: functions (any depth, so a lambda's
+-/// parameter hides a name only inside that lambda), Python comprehensions, and C blocks and `for`
++/// parameter hides a name only inside that lambda), Python comprehensions, and C and C++ blocks and `for`
+ /// statements (a local declared there is visible only there; an unbraced `case` arm is part of
+ /// its `switch` block).
+-fn is_scope(k: &str, c_lang: bool) -> bool {
++fn is_scope(k: &str, block: bool) -> bool {
+     FN_KINDS.contains(&k)
+         || matches!(k, "list_comprehension" | "set_comprehension" | "dictionary_comprehension" | "generator_expression")
+-        || c_lang && matches!(k, "compound_statement" | "for_statement")
++        || block && matches!(k, "compound_statement" | "for_statement" | "for_range_loop")
+ }
+ 
+ /// C: is the innermost parameter list among `anc` (ancestors, parent last) another declarator's
+@@ -343,12 +476,17 @@ struct Walk<'t> {
+     /// C: the declared struct or typedef name of each receiver identifier that names a parameter,
+     /// local or file-level variable (`struct inode *inode; inode->i_mapping`), by start byte.
+     recv_types: HashMap<usize, String>,
++    /// C++: the class a receiver identifier or `this` sits in, by start byte, for an identifier
++    /// that no scope declares (a member of that class) and for `this`.
++    implicit: HashMap<usize, String>,
++    cpp: bool,
+ }
+ 
+ /// One top-down pass over the tree (see [`Walk`]). Linear in the tree size: ancestors are kept
+ /// on a stack, never looked up with `parent()`, which walks down from the root on every call
+ /// and made deeply nested functions (a long `else if` chain) quadratic.
+-fn walk_tree<'t>(root: tree_sitter::Node<'t>, src: &[u8], c_lang: bool) -> Walk<'t> {
++fn walk_tree<'t>(root: tree_sitter::Node<'t>, src: &[u8], c_lang: bool, cpp: bool) -> Walk<'t> {
++    let block = c_lang || cpp;
+     let mut parents: HashMap<usize, tree_sitter::Node<'t>> = HashMap::new();
+     // Scope 0 is the file. (parent scope, declared names)
+     let mut scopes: Vec<(usize, HashSet<String>)> = vec![(0, HashSet::new())];
+@@ -358,11 +496,13 @@ fn walk_tree<'t>(root: tree_sitter::Node<'t>, src: &[u8], c_lang: bool) -> Walk<
+     let mut open: Vec<(usize, usize)> = vec![];
+     // (start byte, innermost scope, name) of identifiers in value slots and receiver positions.
+     let mut uses: Vec<(usize, usize, String)> = vec![];
++    // C++: the class around each receiver identifier and `this`, by start byte.
++    let mut class_at: HashMap<usize, String> = HashMap::new();
+     let mut anc: Vec<tree_sitter::Node> = vec![];
+     let mut cur = root.walk();
+     'walk: loop {
+         let n = cur.node();
+-        if is_scope(n.kind(), c_lang) {
++        if is_scope(n.kind(), block) {
+             let parent = open.last().map_or(0, |o| o.1);
+             scopes.push((parent, HashSet::new()));
+             types.push(HashMap::new());
+@@ -377,11 +517,14 @@ fn walk_tree<'t>(root: tree_sitter::Node<'t>, src: &[u8], c_lang: bool) -> Walk<
+             let file_ok = scope != 0
+                 || !anc.iter().any(|a| PARAM_LISTS.contains(&a.kind()))
+                     && !anc.last().is_some_and(|p| p.kind() == "assignment" && anc.iter().any(|a| a.kind() == "module"));
+-            if file_ok && !(c_lang && c_foreign_param(&anc)) && declares(n, &anc, src) {
++            if file_ok && !(block && c_foreign_param(&anc)) && declares(n, &anc, src) {
+                 scopes[scope].1.insert(name.to_string());
+-                if c_lang
+-                    && let Some(d) = anc.iter().rev().find(|a| matches!(a.kind(), "parameter_declaration" | "declaration"))
+-                    && let Some(t) = c_type_name(*d, src)
++                if block
++                    && let Some(d) = anc.iter().rev().find(|a| {
++                        matches!(a.kind(), "parameter_declaration" | "declaration")
++                            || cpp && matches!(a.kind(), "optional_parameter_declaration" | "for_range_loop")
++                    })
++                    && let Some(t) = if cpp { cpp_decl_type(*d, n, &anc, src) } else { c_type_name(*d, src) }
+                 {
+                     let e = types[scope].entry(name.to_string()).or_insert_with(|| t.clone());
+                     if *e != t {
+@@ -400,7 +543,18 @@ fn walk_tree<'t>(root: tree_sitter::Node<'t>, src: &[u8], c_lang: bool) -> Walk<
+                         && p.child_by_field_name("function").is_some_and(|f| f.id() == n.id()))
+             {
+                 uses.push((n.start_byte(), scope, name.to_string()));
++                if cpp
++                    && matches!(p.kind(), "field_expression" | "pointer_expression" | "subscript_expression")
++                    && let Some(c) = cpp_enclosing_class(&anc, src)
++                {
++                    class_at.insert(n.start_byte(), c);
++                }
+             }
++        } else if cpp
++            && n.kind() == "this"
++            && let Some(c) = cpp_enclosing_class(&anc, src)
++        {
++            class_at.insert(n.start_byte(), c);
+         }
+         if cur.goto_first_child() {
+             anc.push(n);
+@@ -427,7 +581,18 @@ fn walk_tree<'t>(root: tree_sitter::Node<'t>, src: &[u8], c_lang: bool) -> Walk<
+     }
+     let (mut locals, mut file_locals) = (HashSet::new(), HashMap::new());
+     let mut recv_types = HashMap::new();
++    let mut implicit: HashMap<usize, String> = HashMap::new();
+     for (pos, mut sc, name) in uses {
++        // Declared nowhere: in C++, a member of the enclosing class.
++        if let Some(c) = class_at.remove(&pos) {
++            let mut at = sc;
++            while !scopes[at].1.contains(&name) && at != 0 {
++                at = scopes[at].0;
++            }
++            if !scopes[at].1.contains(&name) {
++                implicit.insert(pos, c);
++            }
++        }
+         loop {
+             if scopes[sc].1.contains(&name) {
+                 if let Some(t) = types[sc].get(&name).filter(|t| *t != C_TYPE_CONFLICT) {
+@@ -446,7 +611,8 @@ fn walk_tree<'t>(root: tree_sitter::Node<'t>, src: &[u8], c_lang: bool) -> Walk<
+             sc = scopes[sc].0;
+         }
+     }
+-    Walk { locals, file_locals, parents, recv_types }
++    implicit.extend(class_at);
++    Walk { locals, file_locals, parents, recv_types, implicit, cpp }
+ }
+ 
+ /// Is identifier `x` in a declaring position (a parameter or variable name, not a use)?
+@@ -466,6 +632,8 @@ fn declares(x: tree_sitter::Node, anc: &[tree_sitter::Node], src: &[u8]) -> bool
+             "assignment" | "for_statement" | "for_in_statement" | "for_in_clause" | "assignment_pattern" => {
+                 return is_field(p, "left", c);
+             }
++            // C++ `for (Engine& e : engines)`.
++            "for_range_loop" => return is_field(p, "declarator", c),
+             // Python `with ... as x`, `except E as x`, walrus `(x := ...)`.
+             "as_pattern_target" => return true,
+             "except_clause" => return p.named_child(0).is_some_and(|f| f.id() != c.id()),
+@@ -524,7 +692,8 @@ fn declares(x: tree_sitter::Node, anc: &[tree_sitter::Node], src: &[u8]) -> bool
+             | "reference_declarator"
+             | "init_declarator"
+             | "function_declarator" => {
+-                if !is_field(p, "declarator", c) && p.kind() != "parenthesized_declarator" {
++                // (`parenthesized_declarator` and C++ `reference_declarator` have no field names.)
++                if !is_field(p, "declarator", c) && !matches!(p.kind(), "parenthesized_declarator" | "reference_declarator") {
+                     return false;
+                 }
+                 via_fn_declarator |= p.kind() == "function_declarator";
+@@ -550,7 +719,8 @@ pub fn extract(l: &Lang, src: &[u8]) -> Parsed {
+     let mut it = cur.matches(q, tree.root_node(), src);
+     let text = |n: tree_sitter::Node| n.utf8_text(src).unwrap_or("").to_string();
+     let c_lang = l.name == "c";
+-    let walk = walk_tree(tree.root_node(), src, c_lang);
++    let cpp = l.name == "cpp";
++    let walk = walk_tree(tree.root_node(), src, c_lang, cpp);
+     let c_family = l.family == "c";
+     // Python `@overload` stubs and property setters/deleters, by start byte: (name, scope node).
+     let mut stubs: HashMap<usize, (String, usize)> = HashMap::new();
+@@ -611,7 +781,8 @@ pub fn extract(l: &Lang, src: &[u8]) -> Parsed {
+             // a function spans its body, so the calls inside belong to it.
+             let (node, last) = if kind == FIELD && !value_fn { (nn, nn) } else { (node, last) };
+             let ty = if c_family && matches!(kind.as_str(), "field" | "function" | "type") {
+-                c_type_name(outer.map_or(node, |o| o.0), src)
++                let decl = outer.map_or(node, |o| o.0);
++                if cpp { cpp_type_name(decl, src) } else { c_type_name(decl, src) }
+             } else {
+                 None
+             };
+@@ -658,9 +829,9 @@ pub fn extract(l: &Lang, src: &[u8]) -> Parsed {
+             let rv = if recv { receiver_name(nn, parent, src) } else { None };
+             let recv_local = rv.as_ref().is_some_and(|(_, at)| walk.locals.contains(at));
+             let via = if kind == "import" { import_source(nn, &walk.parents, src) } else { rv.map(|x| x.0) };
+-            let rtype = match (c_lang, kind, parent) {
+-                (true, "call", Some(p)) if recv && p.kind() == "field_expression" => c_chain(p, &walk, src, 0),
+-                (true, "ref", Some(p)) => c_slot(nn, p, &walk, src),
++            let rtype = match (kind, parent) {
++                ("call", Some(p)) if (c_lang || cpp) && recv && p.kind() == "field_expression" => c_chain(p, &walk, src, 0),
++                ("ref", Some(p)) if c_lang => c_slot(nn, p, &walk, src),
+                 _ => None,
+             };
+             out.refs.push(Ref {
+@@ -1073,7 +1244,7 @@ pub fn index_project_with(c: &mut Connection, p: &Project, delta: Option<&crate:
+         Ok(())
+     };
+     let mut cchange = CChange::default();
+-    let is_c = |path: &str| is_c_path(path) || is_header(path);
++    let is_c = |path: &str| is_c_path(path) || is_cpp_path(path) || is_header(path);
+     for path in &removed {
+         old_names(path, &mut sc_names)?;
+         sc_paths.insert(path.clone());
+@@ -1497,6 +1668,8 @@ struct Cand {
+     file_local: bool,
+     /// See [`Def::field_fn`].
+     field_fn: bool,
++    /// Defined in a C++ file.
++    cpp: bool,
+ }
+ 
+ /// One reference row to score.
+@@ -1524,6 +1697,9 @@ struct RefRow {
+     rtype: Option<String>,
+     /// The member a function is stored in (C), as last written.
+     slot: i64,
++    /// C++: the class names the receiver's type stands for, nearest first (the type and the
++    /// typedefs it is an alias of), when [`CTypes::cpp_class`] told it.
++    rclass: Vec<String>,
+ }
+ 
+ /// A C symbol a type path walks through: a struct member (field or function pointer), a
+@@ -1564,6 +1740,9 @@ struct CTypes {
+     /// Names read from the store (scoped runs).
+     loaded: HashSet<String>,
+     all: bool,
++    /// C++ calls are resolved too: a member of a struct a C-parsed header declares (`.h` files
++    /// are C) is also a member of that class name.
++    cpp: bool,
+ }
+ 
+ impl CTypes {
+@@ -1577,6 +1756,11 @@ impl CTypes {
+                     v.push(s.ty.clone());
+                 }
+             }
++            if self.cpp
++                && let Some(rest) = s.parent.strip_prefix("S:").or_else(|| s.parent.strip_prefix("T:"))
++            {
++                self.member.entry((format!("Q:{rest}"), name.to_string())).or_default().push(s.clone());
++            }
+             self.member.entry((s.parent.clone(), name.to_string())).or_default().push(s);
+         } else if matches!(s.kind.as_str(), "type" | "function") {
+             self.named.entry(name.to_string()).or_default().push((s.kind, s.ty));
+@@ -1598,7 +1782,7 @@ impl CTypes {
+         let mut out = vec![t.to_string()];
+         for _ in 0..C_ALIAS_STEPS {
+             let cur = out.last().cloned().unwrap_or_default();
+-            let Some(name) = cur.strip_prefix("T:") else { break };
++            let Some(name) = cur.strip_prefix("T:").or_else(|| cur.strip_prefix("Q:")) else { break };
+             self.load(name, fetch);
+             let targets: HashSet<&String> =
+                 self.named.get(name).into_iter().flatten().filter(|(k, _)| k == "type").filter_map(|(_, t)| t.as_ref()).collect();
+@@ -1642,6 +1826,43 @@ impl CTypes {
+         }
+     }
+ 
++    /// C++: the classes a receiver's type path names (see [`c_chain`], the last segment being the
++    /// method called): its type and the typedefs it is an alias of, nearest first. Empty when a
++    /// field on the way is unknown or ambiguous, or the base has no known type.
++    fn cpp_class(&mut self, path: &str, fetch: &mut dyn FnMut(&str) -> Vec<CSym>) -> Vec<String> {
++        let segs: Vec<&str> = path.split('|').collect();
++        let (Some((_, rest)), Some(base)) = (segs.split_last(), segs.first()) else { return vec![] };
++        let mut ty: Option<String> = if base.starts_with("Q:") {
++            Some(base.to_string())
++        } else if let Some(f) = base.strip_prefix("F:") {
++            self.load(f, fetch);
++            let rets: HashSet<&String> =
++                self.named.get(f).into_iter().flatten().filter(|(k, _)| k == "function").filter_map(|(_, t)| t.as_ref()).collect();
++            // No function of that name: a constructor call (`Engine().start()`), if a class is.
++            if rets.is_empty() {
++                Some(format!("Q:{f}"))
++            } else if rets.len() == 1 {
++                rets.into_iter().next().cloned()
++            } else {
++                None
++            }
++        } else {
++            None
++        };
++        for m in rest.iter().skip(1) {
++            let Some(t) = ty.take() else { return vec![] };
++            let Some(found) = self.members(&t, m, fetch) else { return vec![] };
++            let tys: HashSet<&Option<String>> = found.iter().filter(|f| !f.fnptr).map(|f| &f.ty).collect();
++            // (A C-parsed header names a field's type `T:` or `S:`.)
++            ty = match tys.into_iter().collect::<Vec<_>>().as_slice() {
++                [Some(t)] => t.split_once(':').map(|(_, n)| format!("Q:{n}")),
++                _ => None,
++            };
++        }
++        let Some(t) = ty else { return vec![] };
++        self.aliases(&t, fetch).unwrap_or_default().iter().filter_map(|a| a.strip_prefix("Q:").map(str::to_string)).collect()
++    }
++
+     /// Resolve a type path (see [`c_chain`]) to the member it ends in.
+     fn resolve(&mut self, path: &str, fetch: &mut dyn FnMut(&str) -> Vec<CSym>) -> CRes {
+         let segs: Vec<&str> = path.split('|').collect();
+@@ -1700,6 +1921,11 @@ fn c_slot_id(c: &CRes) -> i64 {
+     }
+ }
+ 
++/// Is `path` a C++ file?
++fn is_cpp_path(path: &str) -> bool {
++    lang::for_path(path).is_some_and(|l| l.name == "cpp")
++}
++
+ /// Is `path` a C file (not C++ or Objective-C, where `x->f()` may call a method)?
+ fn is_c_path(path: &str) -> bool {
+     lang::for_path(path).is_some_and(|l| l.name == "c")
+@@ -1976,10 +2202,22 @@ fn score(r: &RefRow, cands: &[Cand], imp: Option<&FileImports>) -> (i64, i64) {
+     let mut eligible = 0i64;
+     // The best candidate is a function-holding field reached without receiver evidence.
+     let mut field_fn_guess = false;
++    // C++: a call through a receiver of known class reaches that class's method, and no other
++    // class's. A class that defines no method of the name (it inherits it, or the name is a
++    // library's) leaves the call to the scoring below.
++    let typed = r.rclass.iter().find(|t| {
++        call && r.recv
++            && cands
++                .iter()
++                .any(|s| s.cpp && s.parent == **t && is_callable_kind(&s.kind) && !s.local && !(s.path != r.path && s.file_local))
++    });
+     for s in cands {
+         if !lang::interop(fam, s.family) || s.id == r.src && call && is_type_kind(&s.kind) {
+             continue;
+         }
++        if typed.is_some_and(|t| !s.cpp || s.parent != *t) {
++            continue;
++        }
+         if via_hit && s.path == r.path && via.is_some_and(|v| via_match(v, &s.parent) < 20) {
+             continue;
+         }
+@@ -2084,6 +2322,15 @@ fn score(r: &RefRow, cands: &[Cand], imp: Option<&FileImports>) -> (i64, i64) {
+             best.2 += 1;
+         }
+     }
++    if let Some(t) = typed
++        && best.0 > 0
++    {
++        // Overloads of one class are one target; same-name classes in two namespaces are a guess.
++        let mut classes: Vec<i64> = cands.iter().filter(|s| s.cpp && s.parent == *t && s.pid != 0).map(|s| s.pid).collect();
++        classes.sort_unstable();
++        classes.dedup();
++        return (best.1, if classes.len() > 1 { eligible.max(1) } else { 0 });
++    }
+     // A receiver named like the type (`state.update()` -> `State`) is the only signal: the
+     // receiver's real type is unknown (a library `MutableStateFlow` named `state`), so a one-word
+     // name stays unresolved and a longer one is a guess.
+@@ -2126,6 +2373,7 @@ fn map_cand(r: &rusqlite::Row) -> rusqlite::Result<CandRow> {
+             decl: r.get::<_, Option<i64>>(7)?.is_some(),
+             file_local,
+             field_fn: r.get::<_, Option<i64>>(9)?.is_some(),
++            cpp: lang == "cpp",
+         },
+         r.get(10)?,
+         r.get::<_, Option<i64>>(11)?.is_some(),
+@@ -2139,10 +2387,26 @@ const REF_COLS: &str = "rowid, path, src, name, kind, dst, recv, amb, line, via,
+ 
+ /// The C symbol a candidate row stands for, when it is one a type path may walk through.
+ fn c_sym_of(c: &Cand, ty: Option<String>, tag: bool) -> Option<CSym> {
+-    (c.family == "c" && (c.kind == FIELD || c.field_fn || c.kind == "type" || c.kind == "function" && ty.is_some())).then(|| CSym {
++    // (A C++ function in a namespace is a method of it, see `nest`.)
++    let func = c.kind == "function" || c.cpp && c.kind == "method" && !c.field_fn;
++    (c.family == "c" && (c.kind == FIELD || c.field_fn || c.kind == "type" || func && ty.is_some())).then(|| CSym {
+         id: c.id,
+-        kind: c.kind.clone(),
+-        parent: if c.parent.is_empty() { String::new() } else { format!("{}:{}", if tag { "S" } else { "T" }, c.parent) },
++        kind: if func && !c.field_fn { "function".to_string() } else { c.kind.clone() },
++        parent: if c.parent.is_empty() {
++            String::new()
++        } else {
++            format!(
++                "{}:{}",
++                if c.cpp {
++                    "Q"
++                } else if tag {
++                    "S"
++                } else {
++                    "T"
++                },
++                c.parent
++            )
++        },
+         ty,
+         fnptr: c.field_fn,
+     })
+@@ -2166,6 +2430,7 @@ fn map_ref(r: &rusqlite::Row) -> rusqlite::Result<RefRow> {
+         via: r.get(9)?,
+         rtype: r.get(10)?,
+         slot: r.get(11)?,
++        rclass: vec![],
+     })
+ }
+ 
+@@ -2375,7 +2640,15 @@ pub(crate) fn resolve_scoped_c(
+         .filter(|(_, r)| (r.kind == "call" && r.recv || r.kind == "ref" && r.rtype.is_some()) && is_c_path(&r.path))
+         .map(|(i, _)| i)
+         .collect();
+-    let mut ctypes = CTypes { all: scope.is_none(), ..Default::default() };
++    // C++ calls through a receiver whose type path is known.
++    let cpp_refs: Vec<usize> = refs
++        .iter()
++        .enumerate()
++        .filter(|(_, r)| r.kind == "call" && r.recv && r.rtype.is_some() && is_cpp_path(&r.path))
++        .map(|(i, _)| i)
++        .collect();
++    let need_types = !c_refs.is_empty() || !cpp_refs.is_empty();
++    let mut ctypes = CTypes { all: scope.is_none(), cpp: !cpp_refs.is_empty(), ..Default::default() };
+     match scope {
+         None => {
+             let mut q = tx.prepare(&format!(
+@@ -2386,9 +2659,7 @@ pub(crate) fn resolve_scoped_c(
+                 if go_srcs.contains(&c.id) {
+                     type_of.insert(c.id, c.parent.clone());
+                 }
+-                if !c_refs.is_empty()
+-                    && let Some(cs) = c_sym_of(&c, ty, tag)
+-                {
++                if need_types && let Some(cs) = c_sym_of(&c, ty, tag) {
+                     ctypes.add(&name, cs);
+                 }
+                 if c.kind != FIELD {
+@@ -2465,7 +2736,7 @@ pub(crate) fn resolve_scoped_c(
+     // C type paths, each resolved once: per C reference, its result in `cres_all`.
+     let mut cres_all: Vec<CRes> = vec![];
+     let mut cres: HashMap<usize, usize> = HashMap::new();
+-    if !c_refs.is_empty() {
++    if need_types {
+         let mut q = tx.prepare_cached(&format!(
+             "SELECT {CAND_COLS} FROM node WHERE project_id = ?1 AND kind = 'symbol' AND name = ?2 COLLATE NOCASE AND source = 'treesitter'"
+         ))?;
+@@ -2488,6 +2759,16 @@ pub(crate) fn resolve_scoped_c(
+             };
+             cres.insert(i, k);
+         }
++        let mut cpp_memo: HashMap<&str, Vec<String>> = HashMap::new();
++        let mut classes: Vec<(usize, Vec<String>)> = vec![];
++        for &i in &cpp_refs {
++            let Some(path) = refs[i].rtype.as_deref() else { continue };
++            let c = cpp_memo.entry(path).or_insert_with(|| ctypes.cpp_class(path, &mut fetch)).clone();
++            classes.push((i, c));
++        }
++        for (i, c) in classes {
++            refs[i].rclass = c;
++        }
+         trace("resolve: C type paths", t0);
+     }
+     drop(ctypes);
+@@ -2617,6 +2898,7 @@ mod via_tests {
+             decl: false,
+             file_local: false,
+             field_fn: false,
++            cpp: false,
+         }
+     }
+ 
+@@ -2638,6 +2920,7 @@ mod via_tests {
+             line: 9,
+             rtype: None,
+             slot: 0,
++            rclass: vec![],
+         }
+     }
+ 
+diff --git a/tests/treesitter.rs b/tests/treesitter.rs
+index 28d26c8..96981d3 100644
+--- a/tests/treesitter.rs
++++ b/tests/treesitter.rs
+@@ -2091,3 +2091,195 @@ fn c_unbraced_case_locals_reach_later_arms() {
+     let out = fox_code(&p, "a_ops.op", "callers", 4000);
+     assert!(resolved(&out).contains("2 call sites in 1 files") && certain_calls(&out) == 2, "{out}");
+ }
++
++fn cpp_project() -> (tempfile::TempDir, tempfile::TempDir, project::Project) {
++    inline_project(&[
++        (
++            "include/engine.hpp",
++            "#pragma once\nclass Engine {\npublic:\n    void start();\n    void stop();\n};\nclass Pump {\npublic:\n    void start();\n};\nstruct Boat {\n    Engine engine;\n    Pump* pump_;\n    void go();\n};\n",
++        ),
++        ("src/engine.cpp", "#include \"engine.hpp\"\nvoid Engine::start() {}\nvoid Engine::stop() {}\nvoid Pump::start() {}\n"),
++        (
++            "src/boat.cpp",
++            "#include \"engine.hpp\"\nvoid Boat::go() {\n    engine.start();\n    pump_->start();\n    this->engine.stop();\n}\n",
++        ),
++        ("src/local.cpp", "#include \"engine.hpp\"\nvoid a() {\n    Engine e;\n    e.start();\n}\n"),
++        ("src/param.cpp", "#include \"engine.hpp\"\nvoid b(Pump* p) { p->start(); }\nvoid c(const Pump& p) { p.start(); }\n"),
++        ("src/member.cpp", "#include \"engine.hpp\"\nvoid d(Boat& b) {\n    b.engine.start();\n    b.pump_->start();\n}\n"),
++        (
++            "src/autos.cpp",
++            "#include <memory>\n#include \"engine.hpp\"\nvoid e() {\n    auto en = Engine();\n    en.start();\n}\nvoid f() {\n    auto p = std::make_unique<Pump>();\n    p->start();\n}\n",
++        ),
++        (
++            "src/unknown.cpp",
++            "#include \"engine.hpp\"\ntemplate <class T> void g(T& t) { t.start(); }\nvoid h() {\n    auto x = foo();\n    x.start();\n}\n",
++        ),
++    ])
++}
++
++/// The caller lines of a `callers` answer that are not marked as guesses, and the ones that are.
++fn call_lines(out: &str) -> (Vec<String>, Vec<String>) {
++    let mut sure = vec![];
++    let mut guessed = vec![];
++    for l in out.lines().filter(|l| l.trim_start().starts_with(':') && l.contains(" | ")) {
++        if l.contains("guess") { &mut guessed } else { &mut sure }.push(l.to_string());
++    }
++    (sure, guessed)
++}
++
++/// A C++ member call is resolved through its receiver's type, not its name: a local, a
++/// parameter (pointer, reference, const reference), a member of a typed struct (read through a
++/// parameter or as a bare name or `this->` inside a method of its class), `auto x = Engine();`
++/// and `auto p = std::make_unique<Pump>();` reach the right class with certainty; a receiver
++/// whose type is unknown stays a guess.
++#[test]
++fn cpp_member_calls_resolve_through_the_receivers_type() {
++    let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
++    let (_h, _r, p) = cpp_project();
++    let out = fox_code(&p, "Engine.start", "callers", 4000);
++    let (sure, guessed) = call_lines(&out);
++    // Engine::start: the local, the auto, the bare member name in Boat::go and the one read through a parameter.
++    for f in ["autos.cpp (1)", "boat.cpp (1)", "local.cpp (1)", "member.cpp (1)"] {
++        assert!(out.contains(f), "missing {f}: {out}");
++    }
++    assert!(!out.contains("param.cpp"), "{out}");
++    assert_eq!(sure.len(), 4, "{out}");
++    // The two calls on receivers of unknown type are guesses.
++    assert_eq!(guessed.len(), 2, "{out}");
++    assert!(out.contains("6 call sites in 5 files, 2 guessed by name"), "{out}");
++    let out = fox_code(&p, "Pump.start", "callers", 4000);
++    let (sure, guessed) = call_lines(&out);
++    for f in ["autos.cpp (1)", "boat.cpp (1)", "member.cpp (1)", "param.cpp (2)"] {
++        assert!(out.contains(f), "missing {f}: {out}");
++    }
++    assert!(sure.len() == 5 && guessed.is_empty(), "{out}");
++    assert!(out.contains("5 call sites in 4 files") && !out.contains("local.cpp"), "{out}");
++    // `this->engine.stop()` is the only caller of Engine::stop.
++    let out = fox_code(&p, "Engine.stop", "callers", 4000);
++    assert!(out.contains("boat.cpp (1)") && !out.contains("guess"), "{out}");
++}
++
++fn cpp_zoo_project() -> (tempfile::TempDir, tempfile::TempDir, project::Project) {
++    inline_project(&[(
++        "zoo.cpp",
++        "#include <memory>
++namespace zoo {
++class Engine { public: void start() {} void stop() {} };
++class Pump { public: void start() {} };
++using PumpPtr = std::shared_ptr<Pump>;
++struct Boat {
++    Engine engine;
++    PumpPtr pump;
++    std::unique_ptr<Engine> spare;
++    void go();
++};
++void Boat::go() {
++    engine.start();
++    pump->start();
++    spare->start();
++    this->engine.stop();
++}
++Engine& shared_engine() { static Engine e; return e; }
++}
++using namespace zoo;
++void a() { Engine* e = new Engine(); e->start(); }
++void b() { PumpPtr p; p->start(); }
++void c() { std::vector<Engine> es; for (Engine& x : es) x.start(); }
++void d() { auto s = std::make_shared<Pump>(); s->start(); }
++void e1() {
++    Engine e;
++    { Pump e; e.start(); }
++    e.start();
++}
++void f() { auto q = static_cast<Engine*>(nullptr); q->start(); }
++void g(Boat b) { b.spare->start(); Boat* bp = &b; bp->engine.start(); }
++void h() { shared_engine().start(); }
++void unk(Thing t) { t.start(); }
++void unk2() { auto u = make_thing(); u.start(); }
++",
++    )])
++}
++
++/// Declared types through typedefs, `using`, smart pointers, `new`, casts and range-for, blocks
++/// that hide a name, and a function's return type; a type of no class that has the method, and
++/// an `auto` of a function call, are guesses.
++#[test]
++fn cpp_receiver_types_are_declared_or_inferred() {
++    let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
++    let (_h, _r, p) = cpp_zoo_project();
++    let out = fox_code(&p, "Engine.start", "callers", 4000);
++    let (sure, guessed) = call_lines(&out);
++    let on = |v: &[String], pat: &str| v.iter().any(|l| l.contains(pat));
++    for pat in [
++        "engine.start();",
++        "spare->start();",
++        "Engine* e = new Engine(); e->start();",
++        "x.start();",
++        ":28 e1",
++        "static_cast<Engine*>",
++        "bp->engine.start()",
++        "shared_engine().start()",
++    ] {
++        assert!(on(&sure, pat), "{pat} should be certain: {out}");
++    }
++    assert_eq!(guessed.len(), 2, "{out}");
++    assert!(on(&guessed, "Thing t") && on(&guessed, "make_thing"), "{out}");
++    let out = fox_code(&p, "Pump.start", "callers", 4000);
++    let (sure, guessed) = call_lines(&out);
++    for pat in ["pump->start();", "PumpPtr p;", "make_shared<Pump>", "{ Pump e; e.start(); }"] {
++        assert!(on(&sure, pat), "{pat} should be certain: {out}");
++    }
++    assert!(guessed.is_empty() && sure.len() == 4, "{out}");
++    let out = fox_code(&p, "Engine.stop", "callers", 4000);
++    assert!(out.contains("this->engine.stop()") && !out.contains("guess"), "{out}");
++}
++
++/// A header edit that changes a field's type moves the calls through it, and the scoped update
++/// matches a full re-resolution.
++#[test]
++fn cpp_member_calls_follow_header_edits() {
++    let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
++    let (_h, repo, p) = inline_project(&[
++        (
++            "shapes.hpp",
++            "class Square { public: void draw(); };\nclass Circle { public: void draw(); };\nstruct Holder {\n    Square sq;\n};\n",
++        ),
++        ("shapes.cpp", "#include \"shapes.hpp\"\nvoid Square::draw() {}\nvoid Circle::draw() {}\n"),
++        ("use.cpp", "#include \"shapes.hpp\"\nvoid f(Holder& h) { h.sq.draw(); }\n"),
++    ]);
++    let callers = |sym: &str| call_lines(&fox_code(&p, sym, "callers", 4000));
++    assert_eq!(callers("Square.draw"), (vec![callers("Square.draw").0[0].clone()], vec![]));
++    assert!(callers("Square.draw").0[0].contains("h.sq.draw()"));
++    assert!(callers("Circle.draw").0.is_empty() && callers("Circle.draw").1.is_empty());
++    let mut c = db::open_rw().unwrap();
++    let h = repo.path().join("shapes.hpp");
++    let text = std::fs::read_to_string(&h).unwrap();
++    std::fs::write(&h, format!("// shapes\n{}", text.replace("Square sq;", "Circle sq;"))).unwrap();
++    inventory::index_project(&mut c, &p).unwrap();
++    assert_eq!(tsindex::index_project(&mut c, &p).unwrap().parsed, 1);
++    assert!(callers("Square.draw").0.is_empty() && callers("Square.draw").1.is_empty());
++    let moved = callers("Circle.draw");
++    assert!(moved.0.len() == 1 && moved.0[0].contains("h.sq.draw()") && moved.1.is_empty(), "{moved:?}");
++    let snap = |c: &rusqlite::Connection| -> Vec<(i64, i64, i64)> {
++        let mut q = c.prepare("SELECT rowid, dst, amb FROM ts_ref ORDER BY rowid").unwrap();
++        q.query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?))).unwrap().flatten().collect()
++    };
++    let inc = snap(&c);
++    tsindex::resolve(&c, p.id).unwrap();
++    assert_eq!(snap(&c), inc);
++}
++
++/// A `.h` file is parsed as C: the fields of a struct declared there still type a member call.
++#[test]
++fn cpp_member_calls_through_structs_of_c_headers() {
++    let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
++    let (_h, _r, p) = inline_project(&[
++        ("fleet.h", "struct Boat {\n    Engine engine;\n    Pump *pump;\n};\n"),
++        ("parts.cpp", "class Engine { public: void start() {} };\nclass Pump { public: void start() {} };\n"),
++        ("use.cpp", "#include \"fleet.h\"\nvoid d(Boat &b) { b.engine.start(); }\nvoid e(Boat *b) { b->pump->start(); }\n"),
++    ]);
++    let out = fox_code(&p, "Engine.start", "callers", 4000);
++    assert!(out.contains(":2 d c:") && !out.contains("guess") && !out.contains(":3 e c:"), "{out}");
++    let out = fox_code(&p, "Pump.start", "callers", 4000);
++    assert!(out.contains(":3 e c:") && !out.contains("guess") && !out.contains(":2 d c:"), "{out}");
++}

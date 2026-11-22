@@ -1,0 +1,409 @@
+diff --git a/languages/c.scm b/languages/c.scm
+index 1610d14..3255a9b 100644
+--- a/languages/c.scm
++++ b/languages/c.scm
+@@ -6,6 +6,10 @@
+ (declaration declarator: [(function_declarator declarator: (identifier) @name)
+   (pointer_declarator declarator: (function_declarator declarator: (identifier) @name))]) @definition.function
+ (type_definition declarator: (type_identifier) @name) @definition.type
++; A typedef of a function pointer or a function type (also returning a pointer): members of its
++; type are function pointers.
++(type_definition declarator: [(function_declarator declarator: [(parenthesized_declarator (pointer_declarator declarator: (type_identifier) @name)) (type_identifier) @name])
++  (pointer_declarator declarator: (function_declarator declarator: [(parenthesized_declarator (pointer_declarator declarator: (type_identifier) @name)) (type_identifier) @name]))]) @definition.type
+ (enum_specifier name: (type_identifier) @name) @definition.enum
+ (call_expression function: (identifier) @name) @reference.call
+ (call_expression function: (field_expression field: (field_identifier) @name)) @reference.call
+diff --git a/languages/cpp.scm b/languages/cpp.scm
+index 888a571..5f87a02 100644
+--- a/languages/cpp.scm
++++ b/languages/cpp.scm
+@@ -7,6 +7,10 @@
+ (function_definition declarator: (function_declarator declarator: (qualified_identifier scope: (namespace_identifier) @container name: (identifier) @name))) @definition.method
+ (field_declaration declarator: (function_declarator declarator: (field_identifier) @name)) @definition.method
+ (type_definition declarator: (type_identifier) @name) @definition.type
++; A typedef of a function pointer or a function type (also returning a pointer): members of its
++; type are function pointers.
++(type_definition declarator: [(function_declarator declarator: [(parenthesized_declarator (pointer_declarator declarator: (type_identifier) @name)) (type_identifier) @name])
++  (pointer_declarator declarator: (function_declarator declarator: [(parenthesized_declarator (pointer_declarator declarator: (type_identifier) @name)) (type_identifier) @name]))]) @definition.type
+ (enum_specifier name: (type_identifier) @name) @definition.enum
+ (call_expression function: (identifier) @name) @reference.call
+ (call_expression function: (field_expression field: (field_identifier) @name)) @reference.call
+diff --git a/src/db.rs b/src/db.rs
+index 089bdb0..9a81d24 100644
+--- a/src/db.rs
++++ b/src/db.rs
+@@ -461,6 +461,16 @@ pub(crate) fn migrate(c: &Connection) -> Result<()> {
+              PRAGMA user_version = 24;",
+         )?;
+     }
++    if v < 25 {
++        // Members of a typedef'd function-pointer type are function-pointer members, and such
++        // typedefs are symbols: C and C++ files parse again once, and their projects re-score.
++        c.execute_batch(
++            "UPDATE ts_file SET hash = '', size = -1 WHERE lang IN ('c', 'cpp');
++             INSERT OR REPLACE INTO meta(k, v)
++               SELECT 'rescore:' || p.id, 1 FROM project p WHERE EXISTS (SELECT 1 FROM ts_file f WHERE f.project_id = p.id AND f.lang IN ('c', 'cpp'));
++             PRAGMA user_version = 25;",
++        )?;
++    }
+     // Cheap when already set: the setting lives in each table's own config.
+     for t in MERGE_TABLES {
+         defer_merges(c, t)?;
+@@ -762,7 +772,7 @@ pub fn minority(c: &Connection, ranges: &[(i64, i64)]) -> bool {
+ }
+ 
+ /// The schema version this build writes.
+-pub const LATEST: i64 = 24;
++pub const LATEST: i64 = 25;
+ 
+ /// Read-only connection for the hot paths. None if the store does not exist yet.
+ pub fn open_ro() -> Option<Connection> {
+diff --git a/src/tsindex.rs b/src/tsindex.rs
+index 7faee54..3cdea26 100644
+--- a/src/tsindex.rs
++++ b/src/tsindex.rs
+@@ -42,6 +42,12 @@ pub struct Def {
+     /// C/C++: the struct or typedef name of a field's, function's (its return value) or
+     /// typedef's type (`struct inode *i_inode` -> `inode`), for typing member calls.
+     pub ty: Option<String>,
++    /// C/C++ typedef of a function pointer (1) or of a function type (2): members of that type
++    /// are function pointers (see [`link_fn_typedefs`]).
++    pub fp: u8,
++    /// C/C++ field of a typedef type: 0 when declared plainly (`op_fn run;`), 1 behind one pointer
++    /// (`op_t *run;`), 2 otherwise (arrays, more pointers). None for any other field.
++    pub shape: Option<u8>,
+ }
+ 
+ #[derive(Debug, Clone, PartialEq)]
+@@ -166,6 +172,25 @@ fn c_fn_pointer(nn: tree_sitter::Node, decl: tree_sitter::Node) -> bool {
+     false
+ }
+ 
++/// C/C++: does the typedef `decl` define a function pointer (1, `typedef int (*f)(int)`) or a
++/// function type (2, `typedef int f(int)`) as `nn`? 0 for any other typedef.
++fn c_typedef_fn(nn: tree_sitter::Node, decl: tree_sitter::Node) -> u8 {
++    if c_fn_pointer(nn, decl) {
++        return 1;
++    }
++    let mut cur = nn.parent();
++    if let Some(p) = cur.filter(|p| p.kind() == "function_declarator") {
++        cur = p.parent();
++        if cur.is_some_and(|p| p.kind() == "pointer_declarator") {
++            cur = cur.and_then(|p| p.parent());
++        }
++        if cur.is_some_and(|p| p.id() == decl.id()) {
++            return 2;
++        }
++    }
++    0
++}
++
+ /// C: the type a declaration (or a cast's type descriptor) names, in its namespace: a struct or
+ /// union tag as `S:inode` (`const struct inode *`), a typedef name as `T:irq_chip_t`
+ /// (`irq_chip_t *`). Tags and typedef names are separate namespaces in C. None for a primitive
+@@ -610,11 +635,20 @@ pub fn extract(l: &Lang, src: &[u8]) -> Parsed {
+             // A field spans its name: one declaration may name several (`A, B int`). One holding
+             // a function spans its body, so the calls inside belong to it.
+             let (node, last) = if kind == FIELD && !value_fn { (nn, nn) } else { (node, last) };
+-            let ty = if c_family && matches!(kind.as_str(), "field" | "function" | "type") {
++            let fp = if c_family && kind == "type" { c_typedef_fn(nn, node) } else { 0 };
++            let ty = if c_family && fp == 0 && matches!(kind.as_str(), "field" | "function" | "type") {
+                 c_type_name(outer.map_or(node, |o| o.0), src)
+             } else {
+                 None
+             };
++            let shape = (c_family && kind == FIELD && !field_fn && ty.as_deref().is_some_and(|t| t.starts_with("T:"))).then(|| {
++                let decl = outer.map_or(node, |o| o.0);
++                match nn.parent() {
++                    Some(p) if p.id() == decl.id() => 0,
++                    Some(p) if p.kind() == "pointer_declarator" && p.parent().is_some_and(|g| g.id() == decl.id()) => 1,
++                    _ => 2,
++                }
++            });
+             if field_fn {
+                 kind = "method".into();
+             }
+@@ -638,6 +672,8 @@ pub fn extract(l: &Lang, src: &[u8]) -> Parsed {
+                 stat,
+                 field_fn,
+                 ty,
++                fp,
++                shape,
+             });
+         } else if let Some(k) = cn.strip_prefix("reference.") {
+             // A value in an argument list, keyed literal or initializer (`f(name)`, `Name: name`,
+@@ -698,9 +734,44 @@ pub fn extract(l: &Lang, src: &[u8]) -> Parsed {
+         out.defs.retain(|d| stubs.get(&d.start).is_none_or(|k| !real.contains(k)));
+     }
+     nest(&mut out);
++    if c_family {
++        local_fn_typedefs(&mut out);
++    }
+     out
+ }
+ 
++/// C/C++: members typed by a function-pointer typedef of the same file are function members at
++/// once; those typed by another file's typedef wait for [`link_fn_typedefs`].
++fn local_fn_typedefs(out: &mut Parsed) {
++    let mut by_name: HashMap<&str, HashSet<(u8, Option<&str>)>> = HashMap::new();
++    for d in out.defs.iter().filter(|d| d.kind == "type") {
++        by_name.entry(d.name.as_str()).or_default().insert((d.fp, d.ty.as_deref().and_then(|t| t.strip_prefix("T:"))));
++    }
++    let level = |name: &str| -> u8 {
++        let mut cur = name;
++        for _ in 0..FN_TYPEDEF_STEPS {
++            let Some(v) = by_name.get(cur).filter(|v| v.len() == 1) else { return 0 };
++            match v.iter().next() {
++                Some((0, Some(next))) => cur = next,
++                Some((fp, _)) => return *fp,
++                None => return 0,
++            }
++        }
++        0
++    };
++    let hits: Vec<usize> = (0..out.defs.len())
++        .filter(|&i| {
++            let d = &out.defs[i];
++            let lv = d.ty.as_deref().and_then(|t| t.strip_prefix("T:")).map_or(0, level);
++            matches!((d.shape, lv), (Some(0), 1) | (Some(1), 2))
++        })
++        .collect();
++    for i in hits {
++        out.defs[i].field_fn = true;
++        out.defs[i].kind = "method".into();
++    }
++}
++
+ /// The scope a Python definition sits in: the block (or module) holding it, past its
+ /// decorators.
+ fn python_scope(n: tree_sitter::Node) -> Option<usize> {
+@@ -1074,6 +1145,7 @@ pub fn index_project_with(c: &mut Connection, p: &Project, delta: Option<&crate:
+     };
+     let mut cchange = CChange::default();
+     let is_c = |path: &str| is_c_path(path) || is_header(path);
++    let c_touched = removed.iter().any(|p| is_c(p)) || work.iter().any(|w| matches!(w, Work::Parse { path, .. } if is_c(path)));
+     for path in &removed {
+         old_names(path, &mut sc_names)?;
+         sc_paths.insert(path.clone());
+@@ -1142,6 +1214,12 @@ pub fn index_project_with(c: &mut Connection, p: &Project, delta: Option<&crate:
+     trace("ts parse+store", t0);
+     // A store upgraded past the ambiguity column re-scores every reference once.
+     let rescore = db::rescore_pending(&tx, p.id);
++    if (st.parsed > 0 || st.removed > 0) && (c_touched || full || bulk) {
++        let all = full || bulk || rescore || cchange.all;
++        let flipped = link_fn_typedefs(&tx, p.id, (!all).then_some(&sc_paths))?;
++        sc_names.extend(flipped.iter().cloned());
++        cchange.fields.extend(flipped);
++    }
+     if st.parsed > 0 || st.removed > 0 || rescore {
+         let r = resolve_scoped_c(&tx, p.id, (!full && !rescore && !bulk).then_some((&sc_paths, &sc_names)), &cchange)?;
+         (st.rescored, st.resolved) = (r.rescored, r.resolved);
+@@ -1383,6 +1461,12 @@ fn store_file(
+         if let Some(t) = &d.ty {
+             meta["t"] = t.as_str().into();
+         }
++        if d.fp != 0 {
++            meta["fp"] = d.fp.into();
++        }
++        if let Some(sh) = d.shape {
++            meta["sh"] = sh.into();
++        }
+         // C: a member of a struct or union tag (not of an anonymous struct named by a typedef).
+         if (d.kind == FIELD || d.field_fn)
+             && let Some(c) = d.container
+@@ -1478,6 +1562,89 @@ fn fill_rest(tx: &Connection, sink: &Sink, pid: i64, emitted: &HashSet<i64>) ->
+     Ok(())
+ }
+ 
++/// How many typedef steps [`link_fn_typedefs`] follows from a member's type name.
++const FN_TYPEDEF_STEPS: usize = 4;
++
++/// What typedef `name` is: 1 a function pointer, 2 a function type, through typedefs of typedefs;
++/// 0 when it is neither or its definitions disagree.
++fn fn_typedef_level(q: &mut rusqlite::Statement, pid: i64, name: &str, steps: usize, cache: &mut HashMap<String, u8>) -> Result<u8> {
++    if let Some(l) = cache.get(name) {
++        return Ok(*l);
++    }
++    if steps == 0 {
++        return Ok(0);
++    }
++    let rows: Vec<(String, i64, Option<String>)> =
++        q.query_map(params![pid, name], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?.flatten().filter(|(n, _, _)| n == name).collect();
++    let mut levels: HashSet<u8> = HashSet::new();
++    for (_, fp, t) in rows {
++        levels.insert(match (fp, t.as_deref().and_then(|t| t.strip_prefix("T:"))) {
++            (0, Some(next)) => fn_typedef_level(q, pid, next, steps - 1, cache)?,
++            (fp, _) => fp as u8,
++        });
++    }
++    let l = if levels.len() == 1 { levels.into_iter().next().unwrap_or(0) } else { 0 };
++    cache.insert(name.to_string(), l);
++    Ok(l)
++}
++
++/// C/C++: a member whose type is a typedef of a function pointer (`typedef int (*op_fn)(int);
++/// struct ops { op_fn run; }`, or of a function type behind a pointer: `op_t *run;`), through
++/// typedefs of typedefs, is a function-pointer member like `int (*run)(int)`. The typedef may be
++/// in another file than the struct, so this runs once every file of a run is stored. Looks at the
++/// members of `paths` only (all when None). Returns the member names and structs whose kind changed.
++fn link_fn_typedefs(tx: &Connection, pid: i64, paths: Option<&HashSet<String>>) -> Result<HashSet<String>> {
++    type Row = (i64, String, String);
++    let cols = "SELECT id, name, meta FROM node WHERE project_id = ?1 AND kind = 'symbol' AND source = 'treesitter'
++                AND json_extract(meta,'$.sh') IS NOT NULL";
++    let mut rows: Vec<Row> = vec![];
++    let get = |r: &rusqlite::Row| -> rusqlite::Result<Row> { Ok((r.get(0)?, r.get(1)?, r.get(2)?)) };
++    match paths {
++        None => rows.extend(tx.prepare(cols)?.query_map([pid], get)?.flatten()),
++        Some(paths) => {
++            let mut q = tx.prepare(&format!("{cols} AND path = ?2"))?;
++            for path in paths.iter().filter(|p| is_c_path(p) || is_header(p)) {
++                rows.extend(q.query_map(params![pid, path], get)?.flatten());
++            }
++        }
++    }
++    let mut changed = HashSet::new();
++    if rows.is_empty() {
++        return Ok(changed);
++    }
++    let mut types = tx.prepare(
++        "SELECT name, COALESCE(json_extract(meta,'$.fp'),0), json_extract(meta,'$.t') FROM node
++         WHERE project_id = ?1 AND name = ?2 COLLATE NOCASE AND kind = 'symbol' AND source = 'treesitter'
++           AND json_extract(meta,'$.k') = 'type'",
++    )?;
++    let mut cache: HashMap<String, u8> = HashMap::new();
++    let mut upd = tx.prepare_cached("UPDATE node SET meta = ?2 WHERE id = ?1")?;
++    for (id, name, meta) in rows {
++        let Ok(mut m) = serde_json::from_str::<serde_json::Value>(&meta) else { continue };
++        let ty = m["t"].as_str().and_then(|t| t.strip_prefix("T:")).unwrap_or("").to_string();
++        let level = fn_typedef_level(&mut types, pid, &ty, FN_TYPEDEF_STEPS, &mut cache)?;
++        let want = matches!((m["sh"].as_u64(), level), (Some(0), 1) | (Some(1), 2));
++        if want == m.get("f").is_some() {
++            continue;
++        }
++        if want {
++            m["f"] = 1.into();
++            m["k"] = "method".into();
++        } else {
++            if let Some(o) = m.as_object_mut() {
++                o.remove("f");
++            }
++            m["k"] = FIELD.into();
++        }
++        upd.execute(params![id, m.to_string()])?;
++        changed.insert(name);
++        if let Some(parent) = m["parent"].as_str().and_then(|p| p.rsplit('.').next()).filter(|p| !p.is_empty()) {
++            changed.insert(parent.to_string());
++        }
++    }
++    Ok(changed)
++}
++
+ /// A candidate definition, with what scoring needs precomputed.
+ #[derive(Clone)]
+ struct Cand {
+@@ -2225,7 +2392,11 @@ fn c_type_rows(p: &Parsed) -> HashSet<CTypeRow> {
+                     _ => return None,
+                 }
+             };
+-            Some((kind, d.name.clone(), p.container_of(i).unwrap_or_default(), d.ty.clone().unwrap_or_default()))
++            let mut ty = d.ty.clone().unwrap_or_default();
++            if d.fp != 0 {
++                ty = format!("!fp{}", d.fp);
++            }
++            Some((kind, d.name.clone(), p.container_of(i).unwrap_or_default(), ty))
+         })
+         .collect()
+ }
+@@ -2234,15 +2405,23 @@ fn c_type_rows(p: &Parsed) -> HashSet<CTypeRow> {
+ fn c_type_rows_stored(tx: &Connection, pid: i64, path: &str) -> Result<HashSet<CTypeRow>> {
+     let mut q = tx.prepare_cached(
+         "SELECT name, json_extract(meta,'$.k'), COALESCE(json_extract(meta,'$.parent'),''), COALESCE(json_extract(meta,'$.t'),''),
+-                json_extract(meta,'$.f')
++                json_extract(meta,'$.f'), COALESCE(json_extract(meta,'$.fp'),0)
+          FROM node WHERE project_id = ?1 AND path = ?2 AND kind = 'symbol' AND source = 'treesitter'",
+     )?;
+     let rows = q.query_map(params![pid, path], |r| {
+-        Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?, r.get::<_, String>(2)?, r.get::<_, String>(3)?, r.get::<_, Option<i64>>(4)?))
++        Ok((
++            r.get::<_, String>(0)?,
++            r.get::<_, String>(1)?,
++            r.get::<_, String>(2)?,
++            r.get::<_, String>(3)?,
++            r.get::<_, Option<i64>>(4)?,
++            r.get::<_, i64>(5)?,
++        ))
+     })?;
+     Ok(rows
+         .flatten()
+-        .filter_map(|(name, k, parent, t, f)| {
++        .filter_map(|(name, k, parent, t, f, fp)| {
++            let t = if fp != 0 { format!("!fp{fp}") } else { t };
+             let kind = if f.is_some() {
+                 "fnptr"
+             } else {
+diff --git a/tests/treesitter.rs b/tests/treesitter.rs
+index 28d26c8..23df39a 100644
+--- a/tests/treesitter.rs
++++ b/tests/treesitter.rs
+@@ -2091,3 +2091,61 @@ fn c_unbraced_case_locals_reach_later_arms() {
+     let out = fox_code(&p, "a_ops.op", "callers", 4000);
+     assert!(resolved(&out).contains("2 call sites in 1 files") && certain_calls(&out) == 2, "{out}");
+ }
++
++/// A member whose type is a typedef of a function pointer (also a typedef of a typedef, or of a
++/// function type behind a pointer) is a function-pointer member; a data field of a typedef type
++/// is not. The typedef may sit in another file, and editing it moves the members with it.
++#[test]
++fn c_typedef_function_pointer_members_are_function_members() {
++    let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
++    let (_h, repo, p) = inline_project(&[
++        ("types.h", "typedef int (*op_fn)(int);\ntypedef op_fn op2_fn;\ntypedef int op_t(int);\ntypedef int count_t;\n"),
++        ("ops.h", "#include \"types.h\"\nstruct ops {\n\top_fn run;\n\top2_fn run2;\n\top_t *run3;\n\tcount_t n;\n\top_fn *tbl;\n};\n"),
++        (
++            "impl.c",
++            "#include \"ops.h\"\nstatic int impl(int x) { return x; }\nstatic int impl2(int x) { return x; }\nstatic int impl3(int x) { return x; }\nstatic struct ops o = {\n\t.run = impl,\n\t.run2 = impl2,\n\t.run3 = impl3,\n};\n",
++        ),
++        (
++            "call.c",
++            "#include \"ops.h\"\nint use(struct ops *o, int x) { return o->run(x) + o->run2(x) + o->run3(x); }\nint count(struct ops *o) { return o->n; }\n",
++        ),
++    ]);
++    for (m, f) in [("run", "impl"), ("run2", "impl2"), ("run3", "impl3")] {
++        let callers = fox_code(&p, &format!("ops.{m}"), "callers", 4000);
++        assert!(callers.contains("call.c") && callers.contains("use c:"), "{m}: {callers}");
++        let out = fox_code(&p, f, "impact", 4000);
++        assert!(out.contains(&format!("via ops.{m}")) && out.contains("use c:"), "{f}: {out}");
++    }
++    let n = fox_code(&p, "ops.n", "callers", 4000);
++    assert!(!n.contains("use c:"), "{n}");
++    // The typedef changes to plain data: its members stop being function members.
++    let mut c = db::open_rw().unwrap();
++    let h = repo.path().join("types.h");
++    std::fs::write(&h, "typedef int op_fn;\ntypedef op_fn op2_fn;\ntypedef int op_t(int);\ntypedef int count_t;\n").unwrap();
++    inventory::index_project(&mut c, &p).unwrap();
++    tsindex::index_project(&mut c, &p).unwrap();
++    let run = fox_code(&p, "ops.run", "callers", 4000);
++    let run3 = fox_code(&p, "ops.run3", "callers", 4000);
++    assert!(!run.contains("use c:") && run3.contains("use c:"), "{run}\n{run3}");
++    let snap = |c: &rusqlite::Connection| -> Vec<(i64, i64, i64)> {
++        let mut q = c.prepare("SELECT rowid, dst, slot FROM ts_ref ORDER BY rowid").unwrap();
++        q.query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?))).unwrap().flatten().collect()
++    };
++    let inc = snap(&c);
++    tsindex::resolve(&c, p.id).unwrap();
++    assert_eq!(snap(&c), inc);
++    // And back.
++    std::fs::write(&h, "typedef int (*op_fn)(int);\ntypedef op_fn op2_fn;\ntypedef int op_t(int);\ntypedef int count_t;\n").unwrap();
++    inventory::index_project(&mut c, &p).unwrap();
++    tsindex::index_project(&mut c, &p).unwrap();
++    assert!(fox_code(&p, "ops.run2", "callers", 4000).contains("use c:"));
++}
++
++/// The typedef beside the struct in one file: the member is a function member at extraction.
++#[test]
++fn c_typedef_function_pointer_member_in_one_file() {
++    let src = b"typedef int (*op_fn)(int);\ntypedef op_fn op2_fn;\ntypedef int cnt_t;\nstruct ops { op_fn run; op2_fn run2; cnt_t n; op_fn *tbl; };\n";
++    let p = tsindex::extract(lang::by_name("c").unwrap(), src);
++    let got: Vec<(&str, &str)> = p.defs.iter().filter(|d| d.container.is_some()).map(|d| (d.name.as_str(), d.kind.as_str())).collect();
++    assert_eq!(got, [("run", "method"), ("run2", "method"), ("n", "field"), ("tbl", "field")]);
++}

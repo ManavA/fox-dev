@@ -1,0 +1,411 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 9fb62ad..1a50dad 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -3,6 +3,7 @@
+ ## Unreleased
+ 
+ - `callers` of a C function-pointer member lists the lines storing a function in it (`.irq_mask = foo_mask,`) as their own group after the call sites, `stores a function in it (not calls): N`, no longer among the references that are not calls, and they no longer make the answer read as incomplete. `callers` of a function counts the documentation lines naming it after the verdict (`plus N in docs (not code, not listed)`) and never lists them.
++- Python `callers` follow the method resolution order: `self.step()` / `cls.step()` in `class Child(Mixin, Base)` reaches the first `step` along Child's order (Mixin's, a diamond's next class, an overriding subclass's own), and `super().step()` reaches the next class's. A `super()` call in a mixin or diamond branch that only a subclass's order sends to the method is listed with a line saying so.
+ - The SubagentStart brief no longer carries the swarm board protocol line by default: in A/B runs it gave parallel subagents nothing and cost more. `[hooks] swarm_board = true` in `config.toml` brings it back. The parent packet and parent read lines stay.
+ 
+ ## 0.2.5 (2026-11-21)
+diff --git a/src/tscode.rs b/src/tscode.rs
+index 30dc833..1a55d9a 100644
+--- a/src/tscode.rs
++++ b/src/tscode.rs
+@@ -194,14 +194,23 @@ type Sites = (usize, HashSet<String>, HashSet<account::Line>, usize, usize);
+ /// A site whose target was guessed by name among several same-name definitions ends in
+ /// `guess 1 of N`; one guessed among more than [`WEAK_GUESS`] is only counted. Returns (sites,
+ /// their files, their lines, guessed sites, weak guesses left out).
+-fn sites(c: &Connection, root: &std::path::Path, name: &str, targets: &[i64], calls_only: bool, lines: &mut Vec<String>) -> Result<Sites> {
++fn sites(
++    c: &Connection,
++    root: &std::path::Path,
++    name: &str,
++    targets: &[i64],
++    extra: &[i64],
++    calls_only: bool,
++    lines: &mut Vec<String>,
++) -> Result<Sites> {
+     let ids = targets.iter().map(i64::to_string).collect::<Vec<_>>().join(",");
+     let kind = if calls_only { "AND r.kind = 'call'" } else { "" };
++    let extra = extra.iter().map(i64::to_string).collect::<Vec<_>>().join(",");
+     let sql = format!(
+         "SELECT r.path, r.line, r.src, s.name, json_extract(s.meta,'$.parent'), r.amb, r.recv, r.via, json_extract(d.meta,'$.parent'),
+                 d.path, r.project_id
+          FROM ts_ref r LEFT JOIN node s ON s.id = r.src LEFT JOIN node d ON d.id = r.dst
+-         WHERE r.dst != 0 AND r.dst IN ({ids}) {kind} ORDER BY r.path, r.line"
++         WHERE (r.dst != 0 AND r.dst IN ({ids}) OR r.rowid IN ({extra})) {kind} ORDER BY r.path, r.line"
+     );
+     let mut q = c.prepare(&sql)?;
+     // path -> [(caller display, [lines], most same-name candidates)], callers in first-seen order.
+@@ -280,6 +289,85 @@ fn sites(c: &Connection, root: &std::path::Path, name: &str, targets: &[i64], ca
+     Ok((n, files, at, guessed, weak))
+ }
+ 
++/// Rows of `super().name()` calls that reach Python method `top` through a subclass: the call
++/// sits in a class whose own order has no later `name` to run (or a different one), but an
++/// instance of some subclass has `top` next after that class (a diamond, a mixin over a base).
++fn super_sites(c: &Connection, pid: i64, top: &TSym) -> Result<Vec<i64>> {
++    if !top.path.ends_with(".py") || top.parent.as_deref().is_none_or(str::is_empty) {
++        return Ok(vec![]);
++    }
++    let owner = |id: i64| -> Option<i64> {
++        c.query_row("SELECT COALESCE(json_extract(meta,'$.pid'),0) FROM node WHERE id = ?1", [id], |r| r.get::<_, i64>(0))
++            .ok()
++            .filter(|p| *p != 0)
++    };
++    let Some(top_class) = owner(top.id) else { return Ok(vec![]) };
++    let mut q = c.prepare_cached(
++        "SELECT rowid, src, dst FROM ts_ref WHERE project_id = ?1 AND name = ?2 AND via = 'super' AND kind = 'call' AND src != 0 AND dst != ?3",
++    )?;
++    let rows: Vec<(i64, i64, i64)> =
++        q.query_map(params![pid, top.name, top.id], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?.flatten().collect();
++    if rows.is_empty() {
++        return Ok(vec![]);
++    }
++    // Classes that define the name.
++    let mut d = c.prepare_cached(
++        "SELECT COALESCE(json_extract(meta,'$.pid'),0) FROM node INDEXED BY node_sym_name WHERE project_id = ?1 AND kind = 'symbol'
++           AND name = ?2 COLLATE NOCASE AND source = 'treesitter' AND json_extract(meta,'$.k') IN ('method','function')",
++    )?;
++    let definers: HashSet<i64> = d.query_map(params![pid, top.name], |r| r.get::<_, i64>(0))?.flatten().collect();
++    let mut b =
++        c.prepare_cached("SELECT dst FROM ts_ref WHERE src = ?1 AND src != 0 AND kind = 'impl' AND dst != 0 AND amb <= 0 ORDER BY rowid")?;
++    let mut bases = |k: i64| -> Vec<i64> {
++        let mut out: Vec<i64> = vec![];
++        for x in b.query_map([k], |r| r.get::<_, i64>(0)).map(|it| it.flatten().collect::<Vec<_>>()).unwrap_or_default() {
++            if !out.contains(&x) {
++                out.push(x);
++            }
++        }
++        out
++    };
++    let mut memo: HashMap<i64, Vec<i64>> = HashMap::new();
++    // The class each calling method sits in, and the order of each of its subclasses.
++    let mut by_class: HashMap<i64, bool> = HashMap::new();
++    let mut out = vec![];
++    for (rowid, src, _) in rows {
++        // The class of the innermost enclosing method.
++        let mut cur = src;
++        let mut class = None;
++        for _ in 0..8 {
++            let Some(p) = owner(cur) else { break };
++            if c.query_row("SELECT json_extract(meta,'$.k') FROM node WHERE id = ?1", [p], |r| r.get::<_, String>(0))
++                .is_ok_and(|k| is_type_kind(&k))
++            {
++                class = Some(p);
++                break;
++            }
++            cur = p;
++        }
++        let Some(k) = class else { continue };
++        if k == top_class {
++            continue;
++        }
++        let hit = match by_class.get(&k) {
++            Some(h) => *h,
++            None => {
++                let h = related_types_n(c, k, false, OVERRIDE_STEPS)?.into_iter().any(|sub| {
++                    let order = crate::tsindex::linearize(sub, &mut bases, &mut memo);
++                    let Some(at) = order.iter().position(|x| *x == k) else { return false };
++                    order[at + 1..].iter().find(|x| definers.contains(x)) == Some(&top_class)
++                });
++                by_class.insert(k, h);
++                h
++            }
++        };
++        if hit {
++            out.push(rowid);
++        }
++    }
++    Ok(out)
++}
++
+ /// Bytes kept for the accounting line that leads `callers`, `refs` and `impact`.
+ const HEAD_RESERVE: usize = 300;
+ 
+@@ -713,9 +801,21 @@ pub fn run(c: &Connection, p: &Project, sym: &str, rel: &str, depth: usize, curs
+             let calls = rel == "callers" && is_callable_kind(&top.kind);
+             lines.push(format!("{rel} of {}", top.row()));
+             let at = lines.len();
+-            let (n, files, at_lines, guessed, weak) = sites(c, &p.root, &top.name, &[top.id], calls, &mut lines)?;
++            let coop = if calls { super_sites(c, p.id, top)? } else { vec![] };
++            let (n, files, at_lines, guessed, weak) = sites(c, &p.root, &top.name, &[top.id], &coop, calls, &mut lines)?;
+             let g = if guessed > 0 { format!(", {guessed} guessed by name") } else { String::new() } + &weak_note(weak);
+             lines.insert(at, format!("{n} {} in {} files{g}", if calls { "call sites" } else { "refs" }, files.len()));
++            if !coop.is_empty() {
++                let n = coop.len();
++                lines.insert(
++                    at + 1,
++                    format!(
++                        "{n} super() call{} reach{} it only when the instance is of a subclass whose method resolution order puts it next",
++                        if n == 1 { "" } else { "s" },
++                        if n == 1 { "es" } else { "" }
++                    ),
++                );
++            }
+             if weak > 0 {
+                 lines.insert(at + 1, format!("may be incomplete: {}", weak_left_out(weak)));
+             } else if let Some(l) = dispatched_elsewhere(c, p.id, top, &files)? {
+diff --git a/src/tsindex.rs b/src/tsindex.rs
+index 7faee54..66c11a6 100644
+--- a/src/tsindex.rs
++++ b/src/tsindex.rs
+@@ -135,6 +135,11 @@ fn receiver_name(n: tree_sitter::Node, p: Option<tree_sitter::Node>, src: &[u8])
+         r = p.named_child(0).filter(|c| c.id() != n.id());
+     }
+     let mut r = r?;
++    // Python `super().m()` / `super(Cls, self).m()`: the receiver is the next class in the order.
++    if r.kind() == "call" && r.child_by_field_name("function").is_some_and(|f| f.kind() == "identifier" && f.utf8_text(src) == Ok("super"))
++    {
++        return Some(("super".to_string(), r.start_byte()));
++    }
+     // A chain: its last name (`a.b` -> `b`).
+     while r.named_child_count() > 0 && ["navigation", "member", "field", "selector", "attribute"].iter().any(|w| r.kind().contains(w)) {
+         let last = r.named_child(r.named_child_count() as u32 - 1)?;
+@@ -1524,6 +1529,9 @@ struct RefRow {
+     rtype: Option<String>,
+     /// The member a function is stored in (C), as last written.
+     slot: i64,
++    /// Python `self.m()`, `cls.m()` and `super().m()`: the classes whose `m` the call runs first
++    /// to last (the caller's class's method resolution order, past the class for `super()`).
++    mro: Option<Vec<i64>>,
+ }
+ 
+ /// A C symbol a type path walks through: a struct member (field or function pointer), a
+@@ -1965,6 +1973,19 @@ fn score(r: &RefRow, cands: &[Cand], imp: Option<&FileImports>) -> (i64, i64) {
+     // A receiver named exactly like a candidate's type (`pl.Evaluator.Preempt()`) rules out a
+     // same-file member of another type (a local interface with the same method).
+     let via = if r.recv { r.via.as_deref() } else { None };
++    // Python: a call through `self`, `cls` or `super()` runs the first definition along the
++    // caller's class's method resolution order. `super()` never reaches the class's own.
++    if let Some(seq) = &r.mro {
++        let hit =
++            seq.iter().find_map(|k| cands.iter().find(|s| s.pid == *k && (!call || is_callable_kind(&s.kind) || is_type_kind(&s.kind))));
++        match hit {
++            Some(s) => return (s.id, 0),
++            None if via == Some("super") => return (0, 0),
++            None => {}
++        }
++    }
++    // An unplaced `super()` (outside a class) names nothing.
++    let via = via.filter(|v| !(fam == "python" && *v == "super"));
+     let via_hit = via.is_some_and(|v| cands.iter().any(|s| s.family == fam && via_match(v, &s.parent) == 20));
+     // Go: `pkg.Name` through an imported package's name reaches only a package of that name
+     // (`io.Reader` is not this package's `Reader`).
+@@ -2105,6 +2126,87 @@ fn score(r: &RefRow, cands: &[Cand], imp: Option<&FileImports>) -> (i64, i64) {
+     (dst, if guess { eligible.max(1) } else { 0 })
+ }
+ 
++/// The method resolution order of class `k` (C3 linearization: `k`, then its bases' orders
++/// merged, left to right, each class once), from `bases` (a class's direct bases in the order
++/// written). A hierarchy Python would reject (no consistent order) falls back to the first
++/// head that is left; a cycle ends the walk.
++pub(crate) fn linearize(k: i64, bases: &mut dyn FnMut(i64) -> Vec<i64>, memo: &mut HashMap<i64, Vec<i64>>) -> Vec<i64> {
++    fn go(k: i64, bases: &mut dyn FnMut(i64) -> Vec<i64>, memo: &mut HashMap<i64, Vec<i64>>, open: &mut Vec<i64>) -> Vec<i64> {
++        if let Some(m) = memo.get(&k) {
++            return m.clone();
++        }
++        if open.contains(&k) || open.len() > 64 {
++            return vec![k];
++        }
++        open.push(k);
++        let direct = bases(k);
++        let mut seqs: Vec<Vec<i64>> = direct.iter().filter(|&&b| b != k).map(|&b| go(b, bases, memo, open)).collect();
++        seqs.push(direct.into_iter().filter(|&b| b != k).collect());
++        open.pop();
++        let mut out = vec![k];
++        loop {
++            seqs.retain(|q| !q.is_empty());
++            if seqs.is_empty() {
++                break;
++            }
++            let head = seqs.iter().map(|q| q[0]).find(|h| !seqs.iter().any(|q| q[1..].contains(h))).unwrap_or(seqs[0][0]);
++            out.push(head);
++            for q in seqs.iter_mut() {
++                if q[0] == head {
++                    q.remove(0);
++                } else {
++                    q.retain(|x| *x != head);
++                }
++            }
++        }
++        memo.insert(k, out.clone());
++        out
++    }
++    go(k, bases, memo, &mut vec![])
++}
++
++/// Gives each Python `self`, `cls` and `super()` call its class's method resolution order (see
++/// [`RefRow::mro`]). A class's bases are its resolved `impl` references in written order: the
++/// stored ones, with those just scored (`fresh`: rowid -> (target, ambiguity)) in their place.
++fn set_python_mro(
++    tx: &Connection,
++    refs: &mut [RefRow],
++    parent_of: &HashMap<i64, (i64, bool)>,
++    fresh: &HashMap<i64, (i64, i64)>,
++) -> Result<()> {
++    let mut q = tx.prepare_cached("SELECT rowid, dst, amb FROM ts_ref WHERE src = ?1 AND src != 0 AND kind = 'impl' ORDER BY rowid")?;
++    let mut bases = |k: i64| -> Vec<i64> {
++        let rows: Vec<(i64, i64, i64)> =
++            q.query_map([k], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?))).map(|it| it.flatten().collect()).unwrap_or_default();
++        let mut out: Vec<i64> = vec![];
++        for (rowid, dst, amb) in rows {
++            let (dst, amb) = fresh.get(&rowid).copied().unwrap_or((dst, amb));
++            if dst != 0 && amb <= 0 && !out.contains(&dst) {
++                out.push(dst);
++            }
++        }
++        out
++    };
++    let mut memo: HashMap<i64, Vec<i64>> = HashMap::new();
++    for r in refs.iter_mut() {
++        let own =
++            r.recv && matches!(r.kind.as_str(), "call" | "ref") && r.via.as_deref().is_some_and(|v| matches!(v, "self" | "cls" | "super"));
++        if !own || lang::for_path(&r.path).is_none_or(|l| l.family != "python") {
++            continue;
++        }
++        // The class the call sits in: the innermost enclosing definition held by a class (a
++        // nested function inside a method uses its method's `self`).
++        let class = r.enclosing.iter().find_map(|e| {
++            let p = parent_of.get(e)?.0;
++            (p != 0 && parent_of.get(&p).is_some_and(|x| !x.1)).then_some(p)
++        });
++        let Some(k) = class else { continue };
++        let order = linearize(k, &mut bases, &mut memo);
++        r.mro = Some(if r.via.as_deref() == Some("super") { order[1..].to_vec() } else { order });
++    }
++    Ok(())
++}
++
+ /// A candidate row: name, candidate, its C type (`meta.t`) and whether its container is a struct
+ /// tag (`meta.ps`).
+ type CandRow = (String, Cand, Option<String>, bool);
+@@ -2166,6 +2268,7 @@ fn map_ref(r: &rusqlite::Row) -> rusqlite::Result<RefRow> {
+         via: r.get(9)?,
+         rtype: r.get(10)?,
+         slot: r.get(11)?,
++        mro: None,
+     })
+ }
+ 
+@@ -2492,28 +2595,39 @@ pub(crate) fn resolve_scoped_c(
+     }
+     drop(ctypes);
+     // 3. Score in parallel; write only what changed. A C call through a member reaches that
+-    //    member; a function stored in a member records it as its slot.
+-    let mut scored: Vec<(i64, i64, i64)> = refs
+-        .par_iter()
+-        .enumerate()
+-        .map(|(i, r)| {
+-            let c = cres.get(&i).map(|&k| &cres_all[k]);
+-            if let Some(c) = c.filter(|_| r.kind == "call") {
+-                let (d, a) = c_member_score(c);
+-                return (d, a, 0);
+-            }
+-            let all = cands.get(&r.name).map(Vec::as_slice).unwrap_or(&[]);
+-            // A value stored in a member (`x->f = name`, `.f = name`) is a function or nothing.
+-            let (d, a) = if r.rtype.is_some() && r.kind == "ref" {
+-                let callable: Vec<Cand> = all.iter().filter(|s| is_callable_kind(&s.kind)).cloned().collect();
+-                score(r, &callable, imports.get(&r.path))
+-            } else {
+-                score(r, all, imports.get(&r.path))
+-            };
+-            let slot = c.filter(|_| d != 0).map_or(0, c_slot_id);
+-            (d, a, slot)
+-        })
+-        .collect();
++    //    member; a function stored in a member records it as its slot. Python supertypes go
++    //    first: a `self`/`super()` call follows the method resolution order they make.
++    let score_at = |i: usize, r: &RefRow| -> (i64, i64, i64) {
++        let c = cres.get(&i).map(|&k| &cres_all[k]);
++        if let Some(c) = c.filter(|_| r.kind == "call") {
++            let (d, a) = c_member_score(c);
++            return (d, a, 0);
++        }
++        let all = cands.get(&r.name).map(Vec::as_slice).unwrap_or(&[]);
++        // A value stored in a member (`x->f = name`, `.f = name`) is a function or nothing.
++        let (d, a) = if r.rtype.is_some() && r.kind == "ref" {
++            let callable: Vec<Cand> = all.iter().filter(|s| is_callable_kind(&s.kind)).cloned().collect();
++            score(r, &callable, imports.get(&r.path))
++        } else {
++            score(r, all, imports.get(&r.path))
++        };
++        let slot = c.filter(|_| d != 0).map_or(0, c_slot_id);
++        (d, a, slot)
++    };
++    let mut scored: Vec<(i64, i64, i64)> = vec![(0, 0, 0); refs.len()];
++    let supers: Vec<usize> = (0..refs.len()).filter(|&i| refs[i].kind == "impl").collect();
++    let first: Vec<(usize, (i64, i64, i64))> = supers.par_iter().map(|&i| (i, score_at(i, &refs[i]))).collect();
++    let mut fresh: HashMap<i64, (i64, i64)> = HashMap::new();
++    for (i, s) in first {
++        fresh.insert(refs[i].rowid, (s.0, s.1));
++        scored[i] = s;
++    }
++    set_python_mro(tx, &mut refs, &parent_of, &fresh)?;
++    let rest: Vec<usize> = (0..refs.len()).filter(|&i| refs[i].kind != "impl").collect();
++    let second: Vec<(usize, (i64, i64, i64))> = rest.par_iter().map(|&i| (i, score_at(i, &refs[i]))).collect();
++    for (i, s) in second {
++        scored[i] = s;
++    }
+     trace("resolve: scored", t0);
+     let mut out = Resolved { rescored: refs.len(), ..Default::default() };
+     // 4. The precise tier: a fresh SCIP import overrides the name resolution where it knows the target.
+@@ -2638,6 +2752,7 @@ mod via_tests {
+             line: 9,
+             rtype: None,
+             slot: 0,
++            mro: None,
+         }
+     }
+ 
+diff --git a/tests/treesitter.rs b/tests/treesitter.rs
+index 28d26c8..75cbd63 100644
+--- a/tests/treesitter.rs
++++ b/tests/treesitter.rs
+@@ -2091,3 +2091,43 @@ fn c_unbraced_case_locals_reach_later_arms() {
+     let out = fox_code(&p, "a_ops.op", "callers", 4000);
+     assert!(resolved(&out).contains("2 call sites in 1 files") && certain_calls(&out) == 2, "{out}");
+ }
++
++/// Python resolves `self.m()` and `super().m()` along the caller's class's method resolution
++/// order: `class Child(Mixin, Base)` runs Mixin's `step` before Base's, a diamond runs each base
++/// once, and an overriding subclass runs its own. A `super()` call in a mixin also reaches the
++/// method that follows it in a subclass's order.
++#[test]
++fn python_callers_follow_method_resolution_order() {
++    let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
++    let (_h, _r, p) = inline_project(&[
++        ("mro/__init__.py", ""),
++        ("mro/base.py", "class Base:\n    def step(self):\n        return 1\n\n    def run(self):\n        return self.step()\n"),
++        ("mro/mixin.py", "class Mixin:\n    def step(self):\n        return super().step()\n"),
++        (
++            "mro/child.py",
++            "from mro.base import Base\nfrom mro.mixin import Mixin\n\n\nclass Child(Mixin, Base):\n    def go(self):\n        return self.step()\n\n\nclass Plain(Base):\n    def go(self):\n        return self.step()\n",
++        ),
++        (
++            "mro/diamond.py",
++            "class A:\n    def step(self):\n        return 0\n\n\nclass B(A):\n    def step(self):\n        return super().step()\n\n\nclass C(A):\n    def step(self):\n        return super().step()\n\n\nclass D(B, C):\n    def step(self):\n        return super().step()\n\n    def go(self):\n        return self.step()\n\n\nclass E(B, C):\n    def go(self):\n        return self.step()\n\n\nclass F(E):\n    def again(self):\n        return self.step()\n",
++        ),
++    ]);
++    let callers = |sym: &str| resolved(&fox_code(&p, sym, "callers", 4000));
++    // Mixin runs first for a Child; a Plain subclass and Base itself run Base's.
++    let out = callers("Mixin.step");
++    assert!(out.contains("Child.go c:") && !out.contains("Plain.go"), "{out}");
++    let out = callers("Base.step");
++    assert!(out.contains("Plain.go c:") && out.contains("Base.run c:") && !out.contains("Child.go"), "{out}");
++    // Mixin.step's `super().step()` runs Base's for a Child.
++    assert!(out.contains("Mixin.step c:"), "{out}");
++    // Diamond: E and F run B's, D (which overrides) runs its own, and each `super()` goes to the
++    // next class in the order of the instance's class.
++    let out = callers("B.step");
++    assert!(out.contains("E.go c:") && out.contains("F.again c:") && out.contains("D.step c:") && !out.contains("D.go"), "{out}");
++    let out = callers("D.step");
++    assert!(out.contains("D.go c:") && !out.contains("E.go"), "{out}");
++    let out = callers("C.step");
++    assert!(out.contains("B.step c:") && !out.contains("D.step") && !out.contains("E.go"), "{out}");
++    let out = callers("A.step");
++    assert!(out.contains("B.step c:") && out.contains("C.step c:") && !out.contains("D.step"), "{out}");
++}

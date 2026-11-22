@@ -1,0 +1,17 @@
+{
+ "c-typedef": {
+  "hidden": "hidden_c_typedef",
+  "n_hidden": 4,
+  "prompt": "foxdb's C support tracks calls and stores through plain function-pointer struct members, but not when the member's type is a typedef: with `typedef int (*op_fn)(int); struct ops { op_fn run; };`, `o->run(x)` does not show up as a caller of `ops.run`, `.run = impl` is not a store into it, and impact of `impl` never reaches whoever calls `run`. Make typedef'd function-pointer members, including a typedef of a typedef, behave like the plain `int (*run)(int)` case in `fox code`. Plain data fields that merely have a typedef type must not turn into function members."
+ },
+ "py-mro": {
+  "hidden": "hidden_py_mro",
+  "n_hidden": 5,
+  "prompt": "In Python projects `fox code X.step --rel callers` gets overridden methods wrong: for `class Child(Mixin, Base)` where both Mixin and Base define `step`, a `self.step()` inside Child is credited to Base.step although Python would run Mixin's, and `super().step()` is not followed. Callers of an overridden method should follow Python's method resolution order, including diamond hierarchies and subclasses that override. Keep the existing inheritance behaviour working."
+ },
+ "cpp-recv": {
+  "hidden": "hidden_cpp_recv",
+  "n_hidden": 5,
+  "prompt": "In C++ projects `fox code Engine.start --rel callers` marks nearly every call as a guess by name when several classes have a `start` method, even where the receiver's type is plain in the code (a local `Engine e;`, a parameter `Pump* p` or `const Pump& p`, a member of a typed struct, `auto e = Engine();`, `auto p = std::make_unique<Pump>();`). Resolve member calls through the receiver's declared or inferred type the way the C support already does for struct members, so those calls are certain and the right class gets them. A receiver whose type can't be told must stay a guess."
+ }
+}

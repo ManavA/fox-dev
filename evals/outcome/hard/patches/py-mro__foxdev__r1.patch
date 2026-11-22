@@ -1,0 +1,393 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 9fb62ad..7adfb68 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -2,6 +2,7 @@
+ 
+ ## Unreleased
+ 
++- Python `callers` of a method follows the method resolution order (C3): `self.m()` and `cls.m()` in a class reach the first class in its linearization that defines `m` (a mixin ahead of the base, the other arm of a diamond, a subclass's own override), and `super().m()` the first one after the class itself, as certain call sites. A call whose walk meets a base the index cannot resolve before any definition stays with name resolution. Schema 25; Python files re-parse once.
+ - `callers` of a C function-pointer member lists the lines storing a function in it (`.irq_mask = foo_mask,`) as their own group after the call sites, `stores a function in it (not calls): N`, no longer among the references that are not calls, and they no longer make the answer read as incomplete. `callers` of a function counts the documentation lines naming it after the verdict (`plus N in docs (not code, not listed)`) and never lists them.
+ - The SubagentStart brief no longer carries the swarm board protocol line by default: in A/B runs it gave parallel subagents nothing and cost more. `[hooks] swarm_board = true` in `config.toml` brings it back. The parent packet and parent read lines stay.
+ 
+diff --git a/src/db.rs b/src/db.rs
+index 089bdb0..4a3837b 100644
+--- a/src/db.rs
++++ b/src/db.rs
+@@ -461,6 +461,16 @@ pub(crate) fn migrate(c: &Connection) -> Result<()> {
+              PRAGMA user_version = 24;",
+         )?;
+     }
++    if v < 25 {
++        // Python `super().m()` keeps `super` as its receiver (method resolution order for
++        // `callers`): Python files parse again once, and their projects re-score.
++        c.execute_batch(
++            "UPDATE ts_file SET hash = '', size = -1 WHERE lang = 'python';
++             INSERT OR REPLACE INTO meta(k, v)
++               SELECT 'rescore:' || p.id, 1 FROM project p WHERE EXISTS (SELECT 1 FROM ts_file f WHERE f.project_id = p.id AND f.lang = 'python');
++             PRAGMA user_version = 25;",
++        )?;
++    }
+     // Cheap when already set: the setting lives in each table's own config.
+     for t in MERGE_TABLES {
+         defer_merges(c, t)?;
+@@ -762,7 +772,7 @@ pub fn minority(c: &Connection, ranges: &[(i64, i64)]) -> bool {
+ }
+ 
+ /// The schema version this build writes.
+-pub const LATEST: i64 = 24;
++pub const LATEST: i64 = 25;
+ 
+ /// Read-only connection for the hot paths. None if the store does not exist yet.
+ pub fn open_ro() -> Option<Connection> {
+diff --git a/src/lib.rs b/src/lib.rs
+index b2def6c..db3afe0 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -26,6 +26,7 @@ pub mod outbox;
+ pub mod packet;
+ pub mod procinfo;
+ pub mod project;
++pub mod pymro;
+ pub mod query;
+ pub mod redact;
+ pub mod report;
+diff --git a/src/pymro.rs b/src/pymro.rs
+new file mode 100644
+index 0000000..8ea895a
+--- /dev/null
++++ b/src/pymro.rs
+@@ -0,0 +1,190 @@
++//! Python method resolution for `fox code X --rel callers`: where `self.m()`, `cls.m()` and
++//! `super().m()` go, by the C3 linearization of the class the call sits in, over the base
++//! classes the index resolved. A class whose bases are not all known is left to name
++//! resolution when the walk reaches an unknown one before a definition.
++
++use crate::tsindex::{is_callable_kind, is_type_kind};
++use anyhow::Result;
++use rusqlite::{Connection, params};
++use std::collections::{HashMap, VecDeque};
++
++/// One class of a linearization: a project class, or a base the index could not resolve (by name).
++#[derive(Clone, PartialEq, Eq, Hash, Debug)]
++enum Entry {
++    Known(i64),
++    Unknown(String),
++}
++
++/// Deepest chain of base classes read.
++const DEPTH: usize = 24;
++
++struct Mro<'a> {
++    c: &'a Connection,
++    name: &'a str,
++    pid: i64,
++    memo: HashMap<i64, Option<Vec<Entry>>>,
++    members: HashMap<i64, Vec<i64>>,
++    class_of: HashMap<i64, Option<i64>>,
++}
++
++impl Mro<'_> {
++    fn bases(&self, class: i64) -> Result<Vec<Entry>> {
++        let mut q = self.c.prepare_cached("SELECT dst, name, amb FROM ts_ref WHERE src = ?1 AND kind = 'impl' ORDER BY rowid")?;
++        let rows: Vec<(i64, String, i64)> = q.query_map([class], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?.flatten().collect();
++        let mut out: Vec<Entry> = vec![];
++        for (dst, name, amb) in rows {
++            let known = dst != 0 && amb <= 0 && dst != class && self.kind_of(dst).is_some_and(|k| is_type_kind(&k));
++            let e = if known { Entry::Known(dst) } else { Entry::Unknown(name) };
++            if !out.contains(&e) {
++                out.push(e);
++            }
++        }
++        Ok(out)
++    }
++
++    fn kind_of(&self, id: i64) -> Option<String> {
++        self.c
++            .query_row("SELECT json_extract(meta,'$.k') FROM node WHERE id = ?1 AND kind = 'symbol'", [id], |r| {
++                r.get::<_, Option<String>>(0)
++            })
++            .ok()
++            .flatten()
++    }
++
++    /// The C3 linearization of `class`, or None when the hierarchy is inconsistent or too deep.
++    fn mro(&mut self, class: i64, stack: &mut Vec<i64>) -> Result<Option<Vec<Entry>>> {
++        if let Some(m) = self.memo.get(&class) {
++            return Ok(m.clone());
++        }
++        if stack.contains(&class) || stack.len() >= DEPTH {
++            return Ok(None);
++        }
++        stack.push(class);
++        let bases = self.bases(class)?;
++        let mut seqs: Vec<VecDeque<Entry>> = vec![];
++        let mut ok = true;
++        for b in &bases {
++            match b {
++                Entry::Known(k) => match self.mro(*k, stack)? {
++                    Some(m) => seqs.push(m.into()),
++                    None => ok = false,
++                },
++                Entry::Unknown(_) => seqs.push(VecDeque::from([b.clone()])),
++            }
++        }
++        stack.pop();
++        let result = if ok {
++            seqs.push(bases.into());
++            merge(Entry::Known(class), seqs)
++        } else {
++            None
++        };
++        self.memo.insert(class, result.clone());
++        Ok(result)
++    }
++
++    /// Ids of the members of `class` named like the method.
++    fn defined(&mut self, class: i64) -> Result<&Vec<i64>> {
++        if !self.members.contains_key(&class) {
++            let mut q = self.c.prepare_cached(
++                "SELECT id FROM node WHERE project_id = ?1 AND kind = 'symbol' AND name = ?2 AND source = 'treesitter'
++                   AND json_extract(meta,'$.pid') = ?3",
++            )?;
++            let v: Vec<i64> = q.query_map(params![self.pid, self.name, class], |r| r.get(0))?.flatten().collect();
++            self.members.insert(class, v);
++        }
++        Ok(&self.members[&class])
++    }
++
++    /// The class whose method a call in definition `src` goes through `self`: the nearest
++    /// enclosing class (a nested function sees its method's `self`).
++    fn class_of(&mut self, src: i64) -> Option<i64> {
++        if let Some(c) = self.class_of.get(&src) {
++            return *c;
++        }
++        let mut cur = src;
++        let mut found = None;
++        for _ in 0..8 {
++            let up: i64 = self
++                .c
++                .query_row("SELECT COALESCE(json_extract(meta,'$.pid'), 0) FROM node WHERE id = ?1", [cur], |r| r.get(0))
++                .unwrap_or(0);
++            let Some(k) = (up != 0).then(|| self.kind_of(up)).flatten() else { break };
++            if is_type_kind(&k) {
++                found = Some(up);
++                break;
++            }
++            if !is_callable_kind(&k) {
++                break;
++            }
++            cur = up;
++        }
++        self.class_of.insert(src, found);
++        found
++    }
++}
++
++/// C3 merge of `seqs` (each class's linearization, then the list of bases) behind `head`.
++fn merge(head: Entry, mut seqs: Vec<VecDeque<Entry>>) -> Option<Vec<Entry>> {
++    let mut out = vec![head];
++    loop {
++        seqs.retain(|s| !s.is_empty());
++        if seqs.is_empty() {
++            return Some(out);
++        }
++        let pick = seqs.iter().map(|s| &s[0]).find(|h| !seqs.iter().any(|s| s.iter().skip(1).any(|x| x == *h)))?.clone();
++        for s in seqs.iter_mut() {
++            if s.front() == Some(&pick) {
++                s.pop_front();
++            }
++        }
++        out.push(pick);
++    }
++}
++
++/// For `top`, a Python method, the calls named like it through `self`, `cls` or `super()` whose
++/// target the method resolution order decides: call rowid -> whether it reaches `top`. A call
++/// whose walk meets a base the index does not know before any definition is not in the map.
++/// Empty for anything but a Python method.
++pub fn decided_calls(c: &Connection, pid: i64, top_id: i64, top_name: &str, top_path: &str, top_kind: &str) -> Result<HashMap<i64, bool>> {
++    let mut out = HashMap::new();
++    let py = |p: &str| crate::lang::for_path(p).is_some_and(|l| l.family == "python");
++    if !py(top_path) || !is_callable_kind(top_kind) {
++        return Ok(out);
++    }
++    let in_class: bool = c
++        .query_row(
++            "SELECT json_extract(meta,'$.pid') IS NOT NULL AND json_extract(meta,'$.pid') != 0 FROM node WHERE id = ?1",
++            [top_id],
++            |r| r.get(0),
++        )
++        .unwrap_or(false);
++    if !in_class {
++        return Ok(out);
++    }
++    // Precise (SCIP) targets, `amb < 0`, are not second-guessed.
++    let mut q = c.prepare_cached(
++        "SELECT rowid, path, src, via FROM ts_ref WHERE project_id = ?1 AND name = ?2 AND kind = 'call' AND recv != 0 AND amb >= 0
++           AND via IN ('self', 'cls', 'super') AND src != 0",
++    )?;
++    let rows: Vec<(i64, String, i64, String)> =
++        q.query_map(params![pid, top_name], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)))?.flatten().collect();
++    let mut m = Mro { c, name: top_name, pid, memo: HashMap::new(), members: HashMap::new(), class_of: HashMap::new() };
++    for (rowid, path, src, via) in rows {
++        if !py(&path) {
++            continue;
++        }
++        let Some(class) = m.class_of(src) else { continue };
++        let Some(lin) = m.mro(class, &mut vec![])? else { continue };
++        let skip = usize::from(via == "super");
++        for e in lin.iter().skip(skip) {
++            let Entry::Known(k) = e else { break };
++            let defs = m.defined(*k)?;
++            if !defs.is_empty() {
++                out.insert(rowid, defs.contains(&top_id));
++                break;
++            }
++        }
++    }
++    Ok(out)
++}
+diff --git a/src/tscode.rs b/src/tscode.rs
+index 30dc833..5a38dc4 100644
+--- a/src/tscode.rs
++++ b/src/tscode.rs
+@@ -194,14 +194,29 @@ type Sites = (usize, HashSet<String>, HashSet<account::Line>, usize, usize);
+ /// A site whose target was guessed by name among several same-name definitions ends in
+ /// `guess 1 of N`; one guessed among more than [`WEAK_GUESS`] is only counted. Returns (sites,
+ /// their files, their lines, guessed sites, weak guesses left out).
+-fn sites(c: &Connection, root: &std::path::Path, name: &str, targets: &[i64], calls_only: bool, lines: &mut Vec<String>) -> Result<Sites> {
++///
++/// `mro` is Python's method resolution for `self.m()` / `super().m()` calls (see
++/// [`crate::pymro`]): a call it decides reaches the target only when it says so, with certainty,
++/// whatever name resolution chose.
++fn sites(
++    c: &Connection,
++    root: &std::path::Path,
++    name: &str,
++    targets: &[i64],
++    calls_only: bool,
++    mro: &HashMap<i64, bool>,
++    lines: &mut Vec<String>,
++) -> Result<Sites> {
+     let ids = targets.iter().map(i64::to_string).collect::<Vec<_>>().join(",");
+     let kind = if calls_only { "AND r.kind = 'call'" } else { "" };
++    let mut also: Vec<String> = mro.iter().filter(|(_, v)| **v).map(|(k, _)| k.to_string()).collect();
++    also.sort();
++    let also = if also.is_empty() { String::new() } else { format!("OR r.rowid IN ({})", also.join(",")) };
+     let sql = format!(
+         "SELECT r.path, r.line, r.src, s.name, json_extract(s.meta,'$.parent'), r.amb, r.recv, r.via, json_extract(d.meta,'$.parent'),
+-                d.path, r.project_id
++                d.path, r.project_id, r.rowid
+          FROM ts_ref r LEFT JOIN node s ON s.id = r.src LEFT JOIN node d ON d.id = r.dst
+-         WHERE r.dst != 0 AND r.dst IN ({ids}) {kind} ORDER BY r.path, r.line"
++         WHERE ((r.dst != 0 AND r.dst IN ({ids})) {also}) {kind} ORDER BY r.path, r.line"
+     );
+     let mut q = c.prepare(&sql)?;
+     // path -> [(caller display, [lines], most same-name candidates)], callers in first-seen order.
+@@ -211,7 +226,7 @@ fn sites(c: &Connection, root: &std::path::Path, name: &str, targets: &[i64], ca
+     let (mut n, mut guessed, mut weak) = (0, 0, 0);
+     let mut at: HashSet<(String, i64)> = HashSet::new();
+     let mut imports = FileImportNames::default();
+-    for (path, line, src, sname, sparent, amb, recv, via, dparent, dpath, pid) in q
++    for (path, line, src, sname, sparent, mut amb, recv, via, dparent, dpath, pid, rowid) in q
+         .query_map([], |r| {
+             Ok((
+                 r.get::<_, String>(0)?,
+@@ -225,10 +240,16 @@ fn sites(c: &Connection, root: &std::path::Path, name: &str, targets: &[i64], ca
+                 r.get::<_, Option<String>>(8)?,
+                 r.get::<_, Option<String>>(9)?,
+                 r.get::<_, i64>(10)?,
++                r.get::<_, i64>(11)?,
+             ))
+         })?
+         .flatten()
+     {
++        match mro.get(&rowid) {
++            Some(false) => continue,
++            Some(true) => amb = 0,
++            None => {}
++        }
+         if !seen.insert((path.clone(), line, src)) {
+             continue;
+         }
+@@ -713,7 +734,8 @@ pub fn run(c: &Connection, p: &Project, sym: &str, rel: &str, depth: usize, curs
+             let calls = rel == "callers" && is_callable_kind(&top.kind);
+             lines.push(format!("{rel} of {}", top.row()));
+             let at = lines.len();
+-            let (n, files, at_lines, guessed, weak) = sites(c, &p.root, &top.name, &[top.id], calls, &mut lines)?;
++            let mro = if calls { crate::pymro::decided_calls(c, p.id, top.id, &top.name, &top.path, &top.kind)? } else { HashMap::new() };
++            let (n, files, at_lines, guessed, weak) = sites(c, &p.root, &top.name, &[top.id], calls, &mro, &mut lines)?;
+             let g = if guessed > 0 { format!(", {guessed} guessed by name") } else { String::new() } + &weak_note(weak);
+             lines.insert(at, format!("{n} {} in {} files{g}", if calls { "call sites" } else { "refs" }, files.len()));
+             if weak > 0 {
+diff --git a/src/tsindex.rs b/src/tsindex.rs
+index 7faee54..ddbb9cf 100644
+--- a/src/tsindex.rs
++++ b/src/tsindex.rs
+@@ -145,6 +145,12 @@ fn receiver_name(n: tree_sitter::Node, p: Option<tree_sitter::Node>, src: &[u8])
+             r = last;
+         }
+     }
++    // Python `super()` / `super(Cls, self)`: the receiver is the base-class proxy.
++    if r.kind() == "call"
++        && r.child_by_field_name("function").is_some_and(|f| f.kind() == "identifier" && f.utf8_text(src).is_ok_and(|t| t == "super"))
++    {
++        return Some(("super".to_string(), r.start_byte()));
++    }
+     let t = r.utf8_text(src).ok()?;
+     (r.named_child_count() == 0 && !t.is_empty() && t.len() <= 80 && t.chars().all(|c| c.is_alphanumeric() || c == '_'))
+         .then(|| (t.to_string(), r.start_byte()))
+diff --git a/tests/treesitter.rs b/tests/treesitter.rs
+index 28d26c8..bad5e74 100644
+--- a/tests/treesitter.rs
++++ b/tests/treesitter.rs
+@@ -2091,3 +2091,48 @@ fn c_unbraced_case_locals_reach_later_arms() {
+     let out = fox_code(&p, "a_ops.op", "callers", 4000);
+     assert!(resolved(&out).contains("2 call sites in 1 files") && certain_calls(&out) == 2, "{out}");
+ }
++
++/// Python: `self.m()` and `super().m()` go where the method resolution order (C3) of the class
++/// they sit in says: a mixin ahead of the base, the other arm of a diamond, a subclass's own
++/// override; a call in a class that overrides nothing still reaches the base.
++#[test]
++fn python_callers_follow_the_method_resolution_order() {
++    let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
++    let (_h, _r, p) = inline_project(&[
++        ("pkg/__init__.py", ""),
++        (
++            "pkg/base.py",
++            "class Base:\n    def step(self):\n        return 1\n\n    def run_base(self):\n        return self.step()\n\n\nclass Mixin:\n    def step(self):\n        return 2\n\n\nclass Top:\n    def hook(self):\n        return 0\n\n\nclass Right(Top):\n    def hook(self):\n        return 1\n\n\nclass Left(Top):\n    pass\n",
++        ),
++        (
++            "pkg/child.py",
++            "from pkg.base import Base, Mixin, Left, Right\n\n\nclass Child(Mixin, Base):\n    def go(self):\n        return self.step()\n\n    def up(self):\n        return super().step()\n\n\nclass Quiet(Base):\n    def quiet_go(self):\n        return self.step()\n\n\nclass Loud(Base):\n    def step(self):\n        return super().step() + 1\n\n    def loud_go(self):\n        return self.step()\n\n\nclass Diamond(Left, Right):\n    def dia_go(self):\n        return self.hook()\n\n    def dia_up(self):\n        return super().hook()\n\n\nclass Plain(Left):\n    def plain_go(self):\n        return self.hook()\n",
++        ),
++    ]);
++    let callers = |sym: &str| resolved(&fox_code(&p, sym, "callers", 2000));
++    let has = |out: &str, who: &[&str], not: &[&str]| {
++        for w in who {
++            assert!(out.contains(&format!("{w} c:")), "{w} missing: {out}");
++        }
++        for w in not {
++            assert!(!out.contains(&format!("{w} c:")), "{w} listed: {out}");
++        }
++    };
++    has(&callers("Base.step"), &["Base.run_base", "Quiet.quiet_go", "Loud.step"], &["Child.go", "Child.up", "Loud.loud_go"]);
++    has(&callers("Mixin.step"), &["Child.go", "Child.up"], &["Base.run_base", "Quiet.quiet_go", "Loud.step", "Loud.loud_go"]);
++    has(&callers("Loud.step"), &["Loud.loud_go"], &["Child.go", "Quiet.quiet_go"]);
++    has(&callers("Right.hook"), &["Diamond.dia_go", "Diamond.dia_up"], &["Plain.plain_go"]);
++    has(&callers("Top.hook"), &["Plain.plain_go"], &["Diamond.dia_go", "Diamond.dia_up"]);
++    // Followed through an import, the MRO sites are certain, not guesses.
++    assert!(!callers("Mixin.step").contains("guess"), "{}", callers("Mixin.step"));
++    // A base the index does not know ahead of the definition leaves the call to name resolution.
++    let (_h, _r, p) = inline_project(&[
++        ("a.py", "class Base:\n    def step(self):\n        return 1\n"),
++        (
++            "b.py",
++            "from external import External\nfrom a import Base\n\n\nclass Ext(External, Base):\n    def go(self):\n        return self.step()\n",
++        ),
++    ]);
++    let out = resolved(&fox_code(&p, "Base.step", "callers", 2000));
++    assert!(out.contains("Ext.go c:"), "{out}");
++}

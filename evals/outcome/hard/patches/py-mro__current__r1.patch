@@ -1,0 +1,426 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 9fb62ad..79d81cf 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -3,6 +3,7 @@
+ ## Unreleased
+ 
+ - `callers` of a C function-pointer member lists the lines storing a function in it (`.irq_mask = foo_mask,`) as their own group after the call sites, `stores a function in it (not calls): N`, no longer among the references that are not calls, and they no longer make the answer read as incomplete. `callers` of a function counts the documentation lines naming it after the verdict (`plus N in docs (not code, not listed)`) and never lists them.
++- Python `callers` follows the method resolution order: `self.m()`, `cls.m()` and `super().m()` in a class reach the first class along its C3 order that defines `m` (a mixin listed before the base, the far side of a diamond, a subclass's own override), not whichever same-name method came first. `super().m()` is followed to the next definer and, through the subclasses' own orders, to the base a mixin is mixed in front of (listed as a guess). A base class changed in one file re-resolves its subclasses' calls in the others.
+ - The SubagentStart brief no longer carries the swarm board protocol line by default: in A/B runs it gave parallel subagents nothing and cost more. `[hooks] swarm_board = true` in `config.toml` brings it back. The parent packet and parent read lines stay.
+ 
+ ## 0.2.5 (2026-11-21)
+diff --git a/src/tsindex.rs b/src/tsindex.rs
+index 7faee54..3954ac5 100644
+--- a/src/tsindex.rs
++++ b/src/tsindex.rs
+@@ -135,6 +135,14 @@ fn receiver_name(n: tree_sitter::Node, p: Option<tree_sitter::Node>, src: &[u8])
+         r = p.named_child(0).filter(|c| c.id() != n.id());
+     }
+     let mut r = r?;
++    // Python `super()` and `super(Child, self)`: the receiver is the parent class.
++    if r.kind() == "call"
++        && let Some(f) = r.child_by_field_name("function")
++        && f.kind() == "identifier"
++        && f.utf8_text(src).is_ok_and(|t| t == "super")
++    {
++        return Some(("super".to_string(), f.start_byte()));
++    }
+     // A chain: its last name (`a.b` -> `b`).
+     while r.named_child_count() > 0 && ["navigation", "member", "field", "selector", "attribute"].iter().any(|w| r.kind().contains(w)) {
+         let last = r.named_child(r.named_child_count() as u32 - 1)?;
+@@ -2105,6 +2113,104 @@ fn score(r: &RefRow, cands: &[Cand], imp: Option<&FileImports>) -> (i64, i64) {
+     (dst, if guess { eligible.max(1) } else { 0 })
+ }
+ 
++/// Python calls through `self`, `cls` and `super()` in the subclasses of classes the scoped run
++/// touches: a class gaining or losing a base changes which method those calls run, though their
++/// own files and names are untouched. `refs` are the references already loaded to re-score.
++fn python_subclass_calls(tx: &Connection, pid: i64, paths: &HashSet<String>, refs: &[RefRow]) -> Result<Vec<RefRow>> {
++    let is_py = |p: &str| lang::for_path(p).is_some_and(|l| l.family == "python");
++    let mut seeds: Vec<i64> = refs.iter().filter(|r| r.kind == "impl" && r.src != 0 && is_py(&r.path)).map(|r| r.src).collect();
++    let mut classes = tx.prepare_cached(
++        "SELECT id FROM node WHERE project_id = ?1 AND path = ?2 AND kind = 'symbol' AND source = 'treesitter' AND json_extract(meta,'$.k') = 'class'",
++    )?;
++    for path in paths.iter().filter(|p| is_py(p)) {
++        seeds.extend(classes.query_map(params![pid, path], |r| r.get::<_, i64>(0))?.flatten());
++    }
++    if seeds.is_empty() {
++        return Ok(vec![]);
++    }
++    // The classes below them, by what the store resolved.
++    let mut below = tx.prepare_cached("SELECT src FROM ts_ref WHERE dst = ?1 AND kind = 'impl' AND src != 0")?;
++    let mut all: HashSet<i64> = seeds.iter().copied().collect();
++    let mut frontier = seeds;
++    while !frontier.is_empty() && all.len() < PY_SUBS_MAX * 25 {
++        let mut next = vec![];
++        for c in frontier {
++            for s in below.query_map([c], |r| r.get::<_, i64>(0))?.flatten() {
++                if all.insert(s) {
++                    next.push(s);
++                }
++            }
++        }
++        frontier = next;
++    }
++    let mut q = tx.prepare_cached(&format!(
++        "SELECT {REF_COLS} FROM ts_ref WHERE src IN (SELECT id FROM node WHERE kind = 'symbol' AND json_extract(meta,'$.pid') = ?1)
++           AND recv != 0 AND via IN ('self', 'cls', 'super') AND kind IN ('call', 'ref')"
++    ))?;
++    let mut out = vec![];
++    let mut ids: Vec<i64> = all.into_iter().collect();
++    ids.sort_unstable();
++    for c in ids {
++        out.extend(q.query_map([c], map_ref)?.flatten());
++    }
++    Ok(out)
++}
++
++/// Targets of the Python calls through `self`, `cls` and `super()` that the method resolution
++/// order of the calling class settles: reference index -> (method, ambiguity).
++fn python_mro_picks(
++    tx: &Connection,
++    refs: &[RefRow],
++    cands: &HashMap<String, Vec<Cand>>,
++    type_ids: &HashSet<i64>,
++    imports: &HashMap<String, FileImports>,
++) -> Result<HashMap<usize, (i64, i64)>> {
++    let is_py: &dyn Fn(&str) -> bool = &|p| lang::for_path(p).is_some_and(|l| l.family == "python");
++    let wanted: Vec<usize> = refs
++        .iter()
++        .enumerate()
++        .filter(|(_, r)| {
++            r.recv
++                && matches!(r.kind.as_str(), "call" | "ref")
++                && r.via.as_deref().is_some_and(|v| SELF_NAMES.contains(&v))
++                && is_py(&r.path)
++        })
++        .map(|x| x.0)
++        .collect();
++    let mut picks = HashMap::new();
++    if wanted.is_empty() {
++        return Ok(picks);
++    }
++    // The base classes named in the files being re-scored, resolved as the scoring will.
++    let mut fresh: HashMap<i64, (i64, i64)> = HashMap::new();
++    for r in refs.iter().filter(|r| r.kind == "impl" && r.src != 0 && is_py(&r.path)) {
++        let all = cands.get(&r.name).map(Vec::as_slice).unwrap_or(&[]);
++        let (dst, _) = score(r, all, imports.get(&r.path));
++        let is_type = all.iter().any(|c| c.id == dst && is_type_kind(&c.kind));
++        fresh.insert(r.rowid, (r.src, if is_type { dst } else { 0 }));
++    }
++    let mut hier = PyHier::new(tx, fresh);
++    let mut defs: HashMap<&str, HashMap<i64, i64>> = HashMap::new();
++    for &i in &wanted {
++        let r = &refs[i];
++        let Some(class) = r.enclosing.iter().copied().find(|id| type_ids.contains(id)) else { continue };
++        let by_class = defs.entry(r.name.as_str()).or_insert_with(|| {
++            let mut m = HashMap::new();
++            for s in cands.get(&r.name).into_iter().flatten().filter(|s| s.family == "python" && s.pid != 0 && is_callable_kind(&s.kind)) {
++                m.entry(s.pid).or_insert(s.id);
++            }
++            m
++        });
++        if by_class.is_empty() {
++            continue;
++        }
++        if let Some(t) = hier.pick(class, r.via.as_deref() == Some("super"), by_class)? {
++            picks.insert(i, t);
++        }
++    }
++    Ok(picks)
++}
++
+ /// A candidate row: name, candidate, its C type (`meta.t`) and whether its container is a struct
+ /// tag (`meta.ps`).
+ type CandRow = (String, Cand, Option<String>, bool);
+@@ -2169,6 +2275,157 @@ fn map_ref(r: &rusqlite::Row) -> rusqlite::Result<RefRow> {
+     })
+ }
+ 
++/// Most subclasses of one class read when `super()` is followed through them.
++const PY_SUBS_MAX: usize = 200;
++
++/// The Python class hierarchy as method resolution reads it: each class's resolved bases in
++/// source order, its subclasses, and its C3 linearization. The bases come from the `impl` rows
++/// of the store, except those being re-scored (`fresh`: row -> (class, base)).
++struct PyHier<'a> {
++    tx: &'a Connection,
++    fresh: HashMap<i64, (i64, i64)>,
++    bases: HashMap<i64, Vec<i64>>,
++    subs: HashMap<i64, Vec<i64>>,
++    mros: HashMap<i64, Vec<i64>>,
++}
++
++impl<'a> PyHier<'a> {
++    fn new(tx: &'a Connection, fresh: HashMap<i64, (i64, i64)>) -> Self {
++        PyHier { tx, fresh, bases: HashMap::new(), subs: HashMap::new(), mros: HashMap::new() }
++    }
++
++    /// The resolved base classes of `c`, in the order the class statement names them.
++    fn bases(&mut self, c: i64) -> Result<Vec<i64>> {
++        if let Some(b) = self.bases.get(&c) {
++            return Ok(b.clone());
++        }
++        let mut q = self.tx.prepare_cached("SELECT rowid, dst FROM ts_ref WHERE src = ?1 AND kind = 'impl' ORDER BY rowid")?;
++        let mut v: Vec<i64> = vec![];
++        for (row, dst) in q.query_map([c], |r| Ok((r.get::<_, i64>(0)?, r.get::<_, i64>(1)?)))?.flatten() {
++            let dst = self.fresh.get(&row).map_or(dst, |f| f.1);
++            if dst != 0 && dst != c && !v.contains(&dst) {
++                v.push(dst);
++            }
++        }
++        self.bases.insert(c, v.clone());
++        Ok(v)
++    }
++
++    /// The classes naming `c` as a base (at most [`PY_SUBS_MAX`]), by id.
++    fn subs(&mut self, c: i64) -> Result<Vec<i64>> {
++        if let Some(s) = self.subs.get(&c) {
++            return Ok(s.clone());
++        }
++        let mut q = self.tx.prepare_cached("SELECT rowid, src FROM ts_ref WHERE dst = ?1 AND kind = 'impl' AND src != 0 LIMIT ?2")?;
++        let mut v: Vec<i64> = vec![];
++        for (row, src) in q.query_map(params![c, PY_SUBS_MAX as i64 * 2], |r| Ok((r.get::<_, i64>(0)?, r.get::<_, i64>(1)?)))?.flatten() {
++            if !self.fresh.contains_key(&row) {
++                v.push(src);
++            }
++        }
++        v.extend(self.fresh.values().filter(|f| f.1 == c).map(|f| f.0));
++        v.retain(|&s| s != c);
++        v.sort_unstable();
++        v.dedup();
++        v.truncate(PY_SUBS_MAX);
++        self.subs.insert(c, v.clone());
++        Ok(v)
++    }
++
++    /// C3 linearization of `c`; None when the hierarchy is inconsistent (Python refuses it).
++    fn lin(&mut self, c: i64, path: &mut Vec<i64>) -> Result<Option<Vec<i64>>> {
++        if let Some(m) = self.mros.get(&c) {
++            return Ok(Some(m.clone()));
++        }
++        if path.contains(&c) || path.len() > 64 {
++            return Ok(None);
++        }
++        path.push(c);
++        let direct = self.bases(c)?;
++        let mut seqs: Vec<Vec<i64>> = vec![];
++        for b in &direct {
++            match self.lin(*b, path)? {
++                Some(m) => seqs.push(m),
++                None => {
++                    path.pop();
++                    return Ok(None);
++                }
++            }
++        }
++        path.pop();
++        seqs.push(direct);
++        let mut out = vec![c];
++        loop {
++            seqs.retain(|s| !s.is_empty());
++            if seqs.is_empty() {
++                break;
++            }
++            let Some(h) = seqs.iter().map(|s| s[0]).find(|h| seqs.iter().all(|s| !s[1..].contains(h))) else { return Ok(None) };
++            out.push(h);
++            for s in seqs.iter_mut().filter(|s| s[0] == h) {
++                s.remove(0);
++            }
++        }
++        self.mros.insert(c, out.clone());
++        Ok(Some(out))
++    }
++
++    /// The classes Python searches for an attribute of an instance of `c`, in order: C3, or
++    /// depth-first left to right for a hierarchy it would reject.
++    fn mro(&mut self, c: i64) -> Result<Vec<i64>> {
++        if let Some(m) = self.lin(c, &mut vec![])? {
++            return Ok(m);
++        }
++        let mut out: Vec<i64> = vec![];
++        let mut stack = vec![c];
++        while let Some(x) = stack.pop() {
++            if out.contains(&x) || out.len() > 256 {
++                continue;
++            }
++            out.push(x);
++            stack.extend(self.bases(x)?.into_iter().rev());
++        }
++        self.mros.insert(c, out.clone());
++        Ok(out)
++    }
++
++    /// The method a call through `self`/`cls` in class `class` runs (`up`: through `super()`,
++    /// which starts after the class), among `defs` (class id -> its method of the name), and
++    /// how many methods it may reach. `super()` also reaches what the subclasses' own orders
++    /// put after `class` (a mixin's `super().step()` runs the next base of the class mixing it
++    /// in), so a target found only that way, or several, is a guess.
++    fn pick(&mut self, class: i64, up: bool, defs: &HashMap<i64, i64>) -> Result<Option<(i64, i64)>> {
++        let own = self.mro(class)?;
++        let first = own.iter().skip(up as usize).find_map(|k| defs.get(k)).copied();
++        if !up {
++            return Ok(first.map(|t| (t, 0)));
++        }
++        let mut targets: Vec<i64> = first.into_iter().collect();
++        let mut seen: HashSet<i64> = HashSet::from([class]);
++        let mut todo = vec![class];
++        while let Some(x) = todo.pop() {
++            for k in self.subs(x)? {
++                if !seen.insert(k) || seen.len() > PY_SUBS_MAX {
++                    continue;
++                }
++                todo.push(k);
++                let m = self.mro(k)?;
++                if let Some(at) = m.iter().position(|&y| y == class)
++                    && let Some(t) = m[at + 1..].iter().find_map(|y| defs.get(y)).copied()
++                    && !targets.contains(&t)
++                {
++                    targets.push(t);
++                }
++            }
++        }
++        Ok(match targets.as_slice() {
++            [] => None,
++            [t] => Some((*t, first.is_none() as i64)),
++            [t, ..] => Some((*t, targets.len() as i64)),
++        })
++    }
++}
++
+ /// What resolution did: references scored, and how many of those now have a target.
+ #[derive(Debug, Default, Clone, Copy)]
+ pub struct Resolved {
+@@ -2347,6 +2604,11 @@ pub(crate) fn resolve_scoped_c(
+                     refs.extend(one.query_map([id], map_ref)?.flatten());
+                 }
+             }
++            for r in python_subclass_calls(tx, pid, paths, &refs)? {
++                if seen.insert(r.rowid) {
++                    refs.push(r);
++                }
++            }
+             refs.retain(|r| r.kind != "import");
+             let files: HashSet<&str> = refs.iter().map(|r| r.path.as_str()).collect();
+             let mut q = tx.prepare_cached("SELECT name, via FROM ts_ref WHERE project_id = ?1 AND path = ?2 AND kind = 'import'")?;
+@@ -2364,6 +2626,8 @@ pub(crate) fn resolve_scoped_c(
+     //    the container of every definition involved.
+     let mut cands: HashMap<String, Vec<Cand>> = HashMap::new();
+     let mut parent_of: HashMap<i64, (i64, bool)> = HashMap::new(); // id -> (container id, callable)
++    // Types among the definitions involved (the callers' classes, for Python's method resolution).
++    let mut type_ids: HashSet<i64> = HashSet::new();
+     // Go calling definitions: id -> its receiver's type (methods are not nested in their type).
+     let go_srcs: HashSet<i64> =
+         refs.iter().filter(|r| r.recv_local && lang::for_path(&r.path).is_some_and(|l| l.family == "go")).map(|r| r.src).collect();
+@@ -2383,6 +2647,9 @@ pub(crate) fn resolve_scoped_c(
+             ))?;
+             for (name, c, ty, tag) in q.query_map([pid], map_cand)?.flatten() {
+                 parent_of.insert(c.id, (c.pid, is_callable_kind(&c.kind)));
++                if is_type_kind(&c.kind) {
++                    type_ids.insert(c.id);
++                }
+                 if go_srcs.contains(&c.id) {
+                     type_of.insert(c.id, c.parent.clone());
+                 }
+@@ -2433,6 +2700,9 @@ pub(crate) fn resolve_scoped_c(
+                     }
+                     if let Ok((p, k)) = one.query_row([id], |r| Ok((r.get::<_, i64>(0)?, r.get::<_, String>(1)?))) {
+                         parent_of.insert(id, (p, is_callable_kind(&k)));
++                        if is_type_kind(&k) {
++                            type_ids.insert(id);
++                        }
+                         if p != 0 {
+                             next.push(p);
+                         }
+@@ -2491,12 +2761,18 @@ pub(crate) fn resolve_scoped_c(
+         trace("resolve: C type paths", t0);
+     }
+     drop(ctypes);
++    // Python: a call through `self`, `cls` or `super()` reaches the method found along the
++    // calling class's method resolution order.
++    let mro_pick = python_mro_picks(tx, &refs, &cands, &type_ids, &imports)?;
+     // 3. Score in parallel; write only what changed. A C call through a member reaches that
+     //    member; a function stored in a member records it as its slot.
+     let mut scored: Vec<(i64, i64, i64)> = refs
+         .par_iter()
+         .enumerate()
+         .map(|(i, r)| {
++            if let Some(&(t, a)) = mro_pick.get(&i) {
++                return (t, a, 0);
++            }
+             let c = cres.get(&i).map(|&k| &cres_all[k]);
+             if let Some(c) = c.filter(|_| r.kind == "call") {
+                 let (d, a) = c_member_score(c);
+diff --git a/tests/treesitter.rs b/tests/treesitter.rs
+index 28d26c8..a11a637 100644
+--- a/tests/treesitter.rs
++++ b/tests/treesitter.rs
+@@ -2091,3 +2091,67 @@ fn c_unbraced_case_locals_reach_later_arms() {
+     let out = fox_code(&p, "a_ops.op", "callers", 4000);
+     assert!(resolved(&out).contains("2 call sites in 1 files") && certain_calls(&out) == 2, "{out}");
+ }
++
++/// Python: `self.m()` and `super().m()` reach the method Python would run, by the C3 method
++/// resolution order of the calling class: a mixin listed before the base wins, a diamond reads
++/// left to right with the shared base last, and a subclass override takes its own calls.
++#[test]
++fn python_calls_follow_the_method_resolution_order() {
++    let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
++    let (_h, _r, p) = inline_project(&[
++        ("mro/base.py", "class Base:\n    def step(self):\n        return 1\n\n    def run(self):\n        return self.step()\n"),
++        ("mro/mixin.py", "class Mixin:\n    def step(self):\n        return 2\n"),
++        (
++            "mro/child.py",
++            "from mro.base import Base\nfrom mro.mixin import Mixin\n\n\nclass Child(Mixin, Base):\n    def go(self):\n        return self.step()\n\n\nclass Over(Child):\n    def step(self):\n        return super().step()\n\n    def again(self):\n        return self.step()\n\n\nclass Grand(Over):\n    def deep(self):\n        return self.step()\n",
++        ),
++        (
++            "mro/diamond.py",
++            "class A:\n    def step(self):\n        return 1\n\n\nclass B(A):\n    def other(self):\n        return 2\n\n\nclass C(A):\n    def step(self):\n        return super().step()\n\n\nclass D(B, C):\n    def go(self):\n        return self.step()\n\n    def up(self):\n        return super().step()\n",
++        ),
++        (
++            "mro/coop.py",
++            "class Root:\n    def step(self):\n        return 1\n\n\nclass Mix:\n    def step(self):\n        return super().step()\n\n\nclass Both(Mix, Root):\n    def go(self):\n        return self.step()\n",
++        ),
++    ]);
++    let who = |sym: &str| {
++        let out = fox_code(&p, sym, "callers", 2000);
++        out.lines().filter_map(|l| l.trim().strip_prefix(':')).filter_map(|l| l.split(' ').nth(1)).map(str::to_string).collect::<Vec<_>>()
++    };
++    // Base.step is called only by its own `run`: not by Child.go (Mixin comes first), nor by
++    // the subclasses that reach Over.step or Mixin.step.
++    assert_eq!(who("Base.step"), ["Base.run"]);
++    let m = who("Mixin.step");
++    assert!(m.contains(&"Child.go".to_string()), "{m:?}");
++    assert!(m.contains(&"Over.step".to_string()), "super() skips Over, Child and lands on Mixin: {m:?}");
++    assert!(!m.contains(&"Over.again".to_string()) && !m.contains(&"Grand.deep".to_string()), "{m:?}");
++    let o = who("Over.step");
++    assert!(o.contains(&"Over.again".to_string()) && o.contains(&"Grand.deep".to_string()), "{o:?}");
++    // Diamond D(B, C): B has no step, so C's comes before A's.
++    assert_eq!(who("C.step"), ["D.go", "D.up"]);
++    assert_eq!(who("A.step"), ["C.step"]);
++    // A mixin's `super().step()` runs the next base of the class mixing it in.
++    assert_eq!(who("Mix.step"), ["Both.go"]);
++    assert_eq!(who("Root.step"), ["Mix.step"]);
++}
++
++/// Python: changing a base class in one file re-resolves the `self.m()` calls of its subclasses
++/// in other files, which are not touched themselves.
++#[test]
++fn python_method_resolution_follows_a_base_changed_later() {
++    let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
++    let (_h, r, p) = inline_project(&[
++        ("inc/left.py", "class Left:\n    def step(self):\n        return 1\n"),
++        ("inc/right.py", "class Right:\n    def step(self):\n        return 2\n"),
++        ("inc/mid.py", "from inc.left import Left\n\n\nclass Mid(Left):\n    pass\n"),
++        ("inc/sub.py", "from inc.mid import Mid\n\n\nclass Sub(Mid):\n    def go(self):\n        return self.step()\n"),
++    ]);
++    let callers = |sym: &str| fox_code(&p, sym, "callers", 2000).contains("Sub.go c:");
++    assert!(callers("Left.step") && !callers("Right.step"));
++    std::fs::write(r.path().join("inc/mid.py"), "from inc.right import Right\n\n\nclass Mid(Right):\n    pass\n").unwrap();
++    let mut c = db::open_rw().unwrap();
++    inventory::index_project(&mut c, &p).unwrap();
++    tsindex::index_project(&mut c, &p).unwrap();
++    drop(c);
++    assert!(callers("Right.step") && !callers("Left.step"));
++}
