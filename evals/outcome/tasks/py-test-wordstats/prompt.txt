@@ -1,0 +1,3 @@
+The `wordstats` package has no tests at all. Please add a thorough test suite for `src/wordstats/core.py` under `tests/`.
+
+The tests should pin down the documented behaviour, including edge cases, so that a future change that breaks any of the functions is caught. Do not change the code under `src/`; if you believe you have found a bug, mention it in your final message instead of fixing it.

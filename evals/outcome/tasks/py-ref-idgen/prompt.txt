@@ -1,0 +1,9 @@
+Refactor request: idgen keeps its state in module-level globals (`_prefix`, `_counter`, `_issued`, mutated with `global`), so two parts of a program cannot have independent id sequences and tests leak state into each other.
+
+Please move the state into a class, without breaking current callers:
+
+- New `idgen.IdGenerator(prefix="id", start=1)` (exported from the package) with methods `next_id()`, `issued()`, `reset()` and `configure(prefix, start=1)`, behaving exactly like the current module functions (same ids, same ValueErrors for a bad prefix or negative start, `issued()` returns a copy, constructor arguments are validated the same way as `configure`). Instances must not share any state.
+- The module-level functions `configure`, `next_id`, `issued` and `reset` keep working and keep their behaviour, by delegating to one default `IdGenerator` instance. `idgen.reset()` must still restore prefix `id` and counter 1 on that default instance.
+- `gen.py` must no longer use the `global` statement.
+
+Add tests for the class.

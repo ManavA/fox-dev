@@ -1,0 +1,15 @@
+Feature request for semverlite: range matching.
+
+Add `satisfies(version: string, range: string): boolean`, exported from `src/semver.ts`.
+
+A range is one or more comparator sets joined by `||` (the version must satisfy at least one set). A set is whitespace-separated comparators that must all hold. Supported comparators:
+
+- exact: `1.2.3` or `=1.2.3`
+- `>`, `>=`, `<`, `<=` followed by a version (`>=1.2.3`)
+- caret `^1.2.3`: `>=1.2.3 <2.0.0`; for major 0 it pins the minor (`^0.2.3` is `>=0.2.3 <0.3.0`); for `^0.0.3` it is `>=0.0.3 <0.0.4`
+- tilde `~1.2.3`: `>=1.2.3 <1.3.0`
+- partial versions: `1.2` and `1.2.x` and `1.2.*` mean `>=1.2.0 <1.3.0`; `1` / `1.x` mean `>=1.0.0 <2.0.0`; `*`, `x` or an empty range match any release. Partials also work after `^` and `~` (`~1` is `>=1.0.0 <2.0.0`, `^1.2` is `>=1.2.0 <2.0.0`) and with `>=`, `<` etc. (`>=1.2` is `>=1.2.0`).
+
+Prerelease rule (as in npm): a version that has a prerelease tag only satisfies a comparator set if at least one comparator in that same set mentions a prerelease of the same major.minor.patch. So `1.2.3-beta.2` satisfies `>=1.2.3-beta.1` and `^1.2.3-beta.1` but not `>=1.0.0` or `*`. Prerelease versions order as in `compare`.
+
+`satisfies` throws an `Error` if the version is not a valid version or the range contains something it cannot parse. Add tests.

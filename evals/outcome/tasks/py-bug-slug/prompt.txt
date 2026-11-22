@@ -1,0 +1,11 @@
+Bug report: slugify produces ugly or wrong slugs.
+
+Reported by several users of slugkit:
+
+1. `slugify("Hello,   World!!")` returns `"hello-----world--"`. Runs of punctuation/whitespace should collapse into a single separator, and the slug must not start or end with the separator. Expected `"hello-world"`.
+2. Accented text is mangled: `slugify("Crème Brûlée")` returns `"cr-me-br-l-e"`. Accented Latin letters should be transliterated to their base letter, expected `"creme-brulee"`.
+3. `max_length` can leave a dangling separator: `slugify("Hello World", max_length=6)` returns `"hello-"` but should be `"hello"`. The result must never exceed `max_length` and never end with the separator.
+4. With a custom `sep`, the same rules apply: `slugify("  a  b  ", sep="_")` should be `"a_b"`.
+5. Text with nothing sluggable (`""`, `"!!!"`) should give `""`, not a string of separators.
+
+Please fix and add tests.

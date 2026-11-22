@@ -1,0 +1,19 @@
+Feature request for mdtable: column alignment.
+
+`render_table(headers, rows)` always left-aligns. Add an optional `align` argument: `render_table(headers, rows, align=None)`.
+
+- `align` is a sequence with one entry per column, each `"left"`, `"right"` or `"center"`. It may be shorter than the number of columns (missing columns are left-aligned) but not longer, and any other value is a `ValueError`.
+- When `align` is `None` the output is exactly what it is today (plain `---` separators, left-aligned cells).
+- When `align` is given, the separator row carries GitHub alignment markers inside the column width: left `:---`, right `---:`, center `:---:` (the colons count towards the width; the minimum column width of 3 still applies, so a centered column is at least 3 wide, e.g. `:-:`).
+- Cells are padded to match: right-aligned cells are right-justified, centered cells are centered with any odd leftover space going on the right, left-aligned cells are left-justified. This applies to header cells too.
+
+Example:
+
+    render_table(["Name", "Qty"], [["apple", "3"], ["kiwi", "12"]], align=["left", "right"])
+
+    | Name  | Qty |
+    | :---- | --: |
+    | apple |   3 |
+    | kiwi  |  12 |
+
+Add tests for the new behaviour.

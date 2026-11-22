@@ -1,0 +1,13 @@
+Feature request for calc: more of a real calculator.
+
+Extend `calc.evaluate(src, variables=None)` (the new second argument is an optional mapping name -> number). All existing behaviour stays. New requirements:
+
+1. Power operator `**`: binds tighter than `*` `/` `%` and is right-associative, so `2 ** 3 ** 2 == 512`. Unary minus binds looser than `**` on its left side but the exponent may itself be signed: `-2 ** 2 == -4`, `2 ** -1 == 0.5`, `(-2) ** 2 == 4`.
+2. Modulo `%`, same precedence and associativity as `*` and `/`. Python semantics (`-7 % 3 == 2`). Modulo by zero is a division-by-zero error.
+3. Numbers: the existing decimal literals plus scientific notation (`1e3`, `2.5E-2`).
+4. Variables: identifiers (letters, digits, underscore, not starting with a digit) are looked up in `variables`. An unknown name raises `CalcError` whose message contains the name. Names are case-sensitive.
+5. Functions: `min(a, b, ...)` and `max(a, b, ...)` (at least one argument), `abs(x)`, `sqrt(x)` (negative argument is an error), `round(x)` and `round(x, ndigits)` (Python's round). Arguments are full expressions, separated by commas. Wrong argument count, or an unknown function, raises `CalcError`. A name followed by `(` is a function call; a bare name is a variable.
+6. Errors: every `CalcError` now has a `position` attribute: the 0-based index in `src` of the offending token (for unexpected end of input, `len(src)`; for division by zero, the index of the `/` or `%` operator; for an unknown variable or function, the index of its name; for sqrt of a negative number, the index of `sqrt`). Existing messages for the existing errors stay as they are.
+7. Results are floats as today (`evaluate("4/2") == 2.0`); that is unchanged.
+
+Add tests for the new behaviour.

@@ -1,0 +1,7 @@
+Bug report: duration parsing and formatting give wrong answers.
+
+1. `parseDuration("1.5h")` returns 18000000 (5 hours!) instead of 5400000. It silently matches the "5h" part and ignores the rest. Decimal amounts like `1.5h`, `0.25s`, `2.5d` must work.
+2. `parseDuration("1h 30m")` throws, but whitespace between parts is fine and should be allowed (and surrounding whitespace too). Units must also be matched whole: `"10 minutes"` or `"5x"` or `"1h junk"` are invalid and must throw, not be partly parsed (right now `"1h junk"` returns 1h).
+3. `formatDuration(3_600_000)` returns `"1h 0m 0s"`; it should drop zero units: `"1h"`. Likewise `formatDuration(90_000)` is `"1m 30s"` (currently also right), `formatDuration(86_400_000 + 5000)` should be `"1d 5s"` (currently `"1d 0h 0m 5s"`), and `formatDuration(1500)` should be `"1s 500ms"`. `0` stays `"0ms"`.
+
+Please fix and add tests.

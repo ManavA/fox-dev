@@ -1,0 +1,1 @@
+{"id":"ts-hard-feat-memo","kind":"feature","tier":"hard","lang":"ts","src":["src"],"tests":["test"],"scope":["src/","test/"],"hidden_dest":"hidden_tests"}

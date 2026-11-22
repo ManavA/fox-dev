@@ -1,0 +1,8 @@
+Bug report from the finance team, about the ledger package:
+
+"Our month-end numbers don't add up. Three things we noticed:
+ - the sum of the monthly report doesn't match the account balance for accounts that had refunds;
+ - converted amounts are sometimes one cent lower than what our bank shows (e.g. 10.01 USD to EUR at 0.9 should be 9.01 EUR, we get 9.00);
+ - on an account that spans a year with single-digit months, the statement lists September 2024 after October 2024, and the monthly report has its months in the wrong order too."
+
+Find and fix the causes in the library. The documented behaviour in the docstrings is correct: rounding is to the nearest cent (halves round away from zero), amounts are signed (negative = money out), `monthly_summary` returns the net amount per month in chronological order with keys like "2024-09", and dates may be written without zero padding ("2024-9-5") and must still sort and group correctly. Add tests for what you fix.

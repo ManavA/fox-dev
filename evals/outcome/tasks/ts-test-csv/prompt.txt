@@ -1,0 +1,3 @@
+The `csvkit` package has no tests at all. Please add a thorough test suite for `src/csv.ts` under `test/` (Node's built-in test runner, `node --test test/`).
+
+The tests should pin down the behaviour of `parseRows`, `parseCsv` and `toCsv`, including edge cases, so that a future change that breaks any of them is caught. Do not change the code under `src/`; if you believe you have found a bug, mention it in your final message instead of fixing it.

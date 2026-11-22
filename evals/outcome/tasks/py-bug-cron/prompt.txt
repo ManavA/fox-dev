@@ -1,0 +1,7 @@
+Bug report: cronlite parses some expressions wrongly.
+
+1. Stepped ranges ignore where the range starts. `parse_field("7-30/10", 0, 59)` should be `{7, 17, 27}` (every 10 starting at 7) but returns `{10, 20, 30}`. The same goes for a bare start with a step: `5/15` means "from 5 to the maximum, every 15" and should be `{5, 20, 35, 50}` for minutes.
+2. Sunday written as `7` is rejected: `matches("0 9 * * 7", dt)` raises `ValueError`. Many crontabs write Sunday as 7; it must behave exactly like 0, including inside lists and ranges (`5-7` means Fri, Sat, Sun). Day-of-week 0 through 7 are all valid and `parse_field` for the day-of-week field must still work in the generic `parse_field(expr, lo, hi)` way (do not make the generic function special-case weekdays).
+3. When both day-of-month and day-of-week are restricted (neither is `*`), standard cron fires when EITHER matches, not both. `matches("0 0 13 * 5", dt)` should be true on Friday the 13th, on any other Friday, and on the 13th of any month. If only one of the two is restricted, only that one applies, as today.
+
+Please fix these and add tests.

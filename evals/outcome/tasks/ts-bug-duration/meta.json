@@ -1,0 +1,1 @@
+{"id":"ts-bug-duration","kind":"bugfix","lang":"ts","src":["src"],"tests":["test"],"scope":["src/","test/"],"hidden_dest":"hidden_tests"}

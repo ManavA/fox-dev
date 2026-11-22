@@ -1,0 +1,13 @@
+Feature request for tinycache: per-entry expiry (TTL).
+
+We want cache entries to be able to expire. Requirements:
+
+- `LRUCache(capacity, clock=..., default_ttl=None)`: `default_ttl` is keyword-only (in seconds). `None` means entries never expire.
+- `cache.set(key, value, ttl=None)`: `ttl` in seconds for this entry; `None` falls back to `default_ttl`. A ttl (given or default) that is `<= 0` must raise `ValueError`.
+- An entry expires once `clock()` reaches `set_time + ttl` (so at exactly ttl seconds after the set it is already gone).
+- Expired entries are invisible: `get` returns the default, `in` is False, `len()` does not count them, and `keys()` does not list them. They are removed lazily when touched, and `get` must not extend an entry's lifetime.
+- Calling `set` on an existing key replaces its value and restarts its ttl (using the ttl passed to that call, or the default).
+- When the cache is full and a new key is added, expired entries are dropped first; the LRU entry is evicted only if the cache is still full.
+- New method `purge_expired()` removes every expired entry and returns how many were removed.
+
+Existing behaviour without TTLs must not change. Add tests for the new behaviour.

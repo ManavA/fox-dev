@@ -1,0 +1,22 @@
+{"file": "src/csv.ts", "mutants": [
+ {"old": "delimiter = \",\"): string[][]", "new": "delimiter = \";\"): string[][]"},
+ {"old": "text[i + 1] === '\"'", "new": "text[i + 1] !== '\"'"},
+ {"old": "i += 2;", "new": "i += 1;"},
+ {"old": "ch === '\"' && field === \"\"", "new": "ch === '\"'"},
+ {"old": "ch === \"\\n\" || ch === \"\\r\"", "new": "ch === \"\\n\""},
+ {"old": "if (ch === \"\\r\" && text[i + 1] === \"\\n\") i++;", "new": ""},
+ {"old": "if (inQuotes) throw", "new": "if (!inQuotes) throw"},
+ {"old": "if (field !== \"\" || row.length > 0)", "new": "if (field !== \"\")"},
+ {"old": "opts.delimiter ?? \",\"", "new": "\",\""},
+ {"old": "if (!opts.header) return rows;", "new": "if (opts.header) return rows;"},
+ {"old": "if (!names) return [];", "new": "if (!names) return [[]] as any;"},
+ {"old": "r.length !== names.length", "new": "r.length < names.length"},
+ {"old": "value.includes('\"') ||", "new": ""},
+ {"old": "value.includes(\"\\n\") ||", "new": ""},
+ {"old": "value.includes(\"\\r\") ||", "new": ""},
+ {"old": "value.includes(delimiter)", "new": "value.includes(\",\")"},
+ {"old": "value.replace(/\"/g, '\"\"')", "new": "value.replace(/\"/, '\"\"')"},
+ {"old": ".join(\"\\n\")", "new": ".join(\"\\r\\n\")"},
+ {"old": "} else if (ch === delimiter) {", "new": "} else if (ch === \",\") {"},
+ {"old": "row = [];\n      field = \"\";\n    } else {", "new": "row = [];\n    } else {"}
+]}

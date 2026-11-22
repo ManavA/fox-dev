@@ -1,0 +1,1 @@
+{"id":"ts-test-csv","kind":"tests","lang":"ts","src":["src"],"tests":["test"],"scope":["test/"],"hidden_dest":"hidden_tests"}

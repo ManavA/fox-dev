@@ -1,0 +1,1 @@
+{"id":"py-feat-ttl","kind":"feature","lang":"py","src":["src"],"tests":["tests"],"scope":["src/","tests/"],"test_cmd":"python -m pytest -q","hidden_dest":"hidden_tests","hidden_cmd":"python -m pytest -q hidden_tests"}

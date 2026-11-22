@@ -1,0 +1,13 @@
+Refactor request: invoice.render.render_invoice is one 40-line function that mixes pricing maths, validation and text formatting, and repeats the same `quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)` expression seven times. It is hard to test and to change.
+
+Please refactor it without changing its output or the exceptions it raises (same messages, same order of checks). Specifically:
+
+- Create `invoice/pricing.py` holding the money maths with these public functions:
+  - `money(x: Decimal) -> Decimal`: round to cents, half up. The only place the rounding expression appears.
+  - `line_total(item: dict) -> Decimal`: validates the item (positive qty, non-negative price, same ValueError messages as today) and returns qty x unit_price in cents.
+  - `discount_amount(subtotal: Decimal, code: str | None) -> Decimal`: `SAVE10` is 10%, `FIVEOFF` is a flat 5.00 when the subtotal is at least 50.00, `None` is 0.00, anything else raises ValueError as today.
+  - `tax_amount(taxable: Decimal, rate: str) -> Decimal`: taxable x rate, in cents.
+- `render_invoice` stays in `invoice/render.py` with the same signature and byte-identical output, but is built from small helpers; no function in the package may be longer than 20 lines (blank lines and docstrings included).
+- Keep `from invoice import render_invoice` working.
+
+Add unit tests for the new pricing functions.

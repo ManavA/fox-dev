@@ -1,0 +1,1 @@
+{"id":"ts-feat-range","kind":"feature","lang":"ts","src":["src"],"tests":["test"],"scope":["src/","test/"],"hidden_dest":"hidden_tests"}

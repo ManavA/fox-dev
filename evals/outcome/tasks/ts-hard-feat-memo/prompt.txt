@@ -1,0 +1,18 @@
+Feature request for memokit: an async memoizer.
+
+Add `memoizeAsync` to `src/memoize.ts` (exported). Signature:
+
+    memoizeAsync<A extends unknown[], R>(fn: (...args: A) => Promise<R>, opts?: AsyncMemoizeOptions<A>): MemoizedAsync<A, R>
+
+Options: `key` (as for `memoize`, default `JSON.stringify(args)`), `ttlMs?: number` (entries older than this are stale; default no expiry), `maxSize?: number` (default unbounded), `now?: () => number` (clock, default `Date.now`, injectable for tests).
+
+Behaviour:
+- A resolved value is cached by key; later calls with the same key return it without calling `fn`.
+- Concurrent calls with the same key while the first is still pending share that one in-flight promise (`fn` is called once).
+- A rejection is never cached: every caller that was waiting on it gets the rejection, and the next call after it calls `fn` again.
+- TTL: an entry is stale once `now() - storedAt >= ttlMs`, where `storedAt` is the time the promise resolved (not the time the call started). A stale entry is treated as absent (call `fn` again). Entries that are still pending are never stale.
+- `maxSize`: at most `maxSize` entries (pending or resolved) are kept. When adding an entry would exceed it, evict the least recently used entry; a cache hit (including joining an in-flight promise) counts as a use. An evicted in-flight promise still resolves for the callers that already hold it, but it is no longer shared with later callers and must not be stored when it resolves.
+- The returned function has `.clear()`, `.delete(...args)` (returns whether an entry for that key existed) and `.size` (number of entries currently held, pending or resolved, not counting stale ones that are known to be stale).
+- `clear()` and `delete()` also detach in-flight calls: a promise that was pending when `clear()` or `delete()` ran must not repopulate the cache when it resolves later (callers already waiting still get their value).
+
+Add tests for it.

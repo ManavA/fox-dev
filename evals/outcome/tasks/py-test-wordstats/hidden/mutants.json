@@ -1,0 +1,20 @@
+{"file": "src/wordstats/core.py", "mutants": [
+ {"old": "w.strip(\"'\")", "new": "w"},
+ {"old": "words = [w for w in words if w]\n", "new": ""},
+ {"old": "\"the\", ", "new": ""},
+ {"old": "(-kv[1], kv[0])", "new": "(kv[1], kv[0])"},
+ {"old": "(-kv[1], kv[0])", "new": "(-kv[1],)"},
+ {"old": "if n < 0:", "new": "if n <= 0:"},
+ {"old": "ranked[:n]", "new": "ranked[:n + 1]"},
+ {"old": "(?<=[.!?])", "new": "(?<=[.!])"},
+ {"old": "return 0.0", "new": "return 1.0"},
+ {"old": "if wpm <= 0:", "new": "if wpm < 0:"},
+ {"old": "math.ceil(words / wpm)", "new": "math.floor(words / wpm)"},
+ {"old": "n=10, keep_stopwords=False", "new": "n=10, keep_stopwords=True"},
+ {"old": "findall(text.lower())", "new": "findall(text)"},
+ {"old": "[a-z0-9']+", "new": "[a-z']+"},
+ {"old": "if words else 0", "new": "if words else 1"},
+ {"old": "if w not in STOPWORDS", "new": "if w in STOPWORDS"},
+ {"old": "sum(counts) / len(counts)", "new": "sum(counts) // len(counts)"},
+ {"old": "text.strip()", "new": "text"}
+]}

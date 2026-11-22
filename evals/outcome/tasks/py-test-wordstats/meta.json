@@ -1,0 +1,1 @@
+{"id":"py-test-wordstats","kind":"tests","lang":"py","src":["src"],"tests":["tests"],"scope":["tests/"],"hidden_dest":"hidden_tests","test_cmd":"python -m pytest -q"}
