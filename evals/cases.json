@@ -30,5 +30,13 @@
 {"id":"ctl-5","family":"none","prompt":"List the files in this repo."},
 {"id":"ctl-6","family":"none","prompt":"What's the difference between a list and a tuple in Python?"},
 {"id":"ctl-7","family":"none","prompt":"Fix the typo in README.md: change 'tiny' to 'small'."},
-{"id":"ctl-8","family":"none","prompt":"What does list_items in app.py do?"}
+{"id":"ctl-8","family":"none","prompt":"What does list_items in app.py do?"},
+{"id":"ui-1","family":"ui","prompt":"templates/items.html looks cramped and the buttons are hard to see on a phone. Redesign the page so it looks good and works on mobile."},
+{"id":"ui-2","family":"ui","prompt":"Build a settings page for display name and email notifications. Make it look polished and accessible."},
+{"id":"prose-1","family":"prose","prompt":"Rewrite README.md so a new user understands what this service does and how to run it within a minute of reading."},
+{"id":"prose-2","family":"prose","prompt":"Tighten this status update before I send it to my team: \"So basically we have been working on the caching stuff and it is mostly kind of done I think, there were some issues with the TTL but those are probably fixed now, more or less.\""},
+{"id":"neg-1","family":"not-ui-prose","prompt":"Add a `limit` argument to list_items in app.py that caps how many items it returns."},
+{"id":"neg-2","family":"not-ui-prose","prompt":"Add a docstring to TTLCache.set in cache.py."},
+{"id":"neg-3","family":"not-ui-prose","prompt":"Write a test in tests/test_utils.py for paginate's last partial page."},
+{"id":"neg-4","family":"not-ui-prose","prompt":"Make handle() in app.py return the items as pretty-printed JSON with two-space indentation."}
 ]

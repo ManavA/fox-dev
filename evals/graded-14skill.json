@@ -1,0 +1,902 @@
+[
+ {
+  "id": "build-1",
+  "fam": "build",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 9055,
+  "hit": false
+ },
+ {
+  "id": "build-1",
+  "fam": "build",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 9055,
+  "hit": false
+ },
+ {
+  "id": "build-2",
+  "fam": "build",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 9092,
+  "hit": false
+ },
+ {
+  "id": "build-2",
+  "fam": "build",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 9092,
+  "hit": false
+ },
+ {
+  "id": "ctl-1",
+  "fam": "none",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 9039,
+  "hit": null
+ },
+ {
+  "id": "ctl-1",
+  "fam": "none",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 9039,
+  "hit": null
+ },
+ {
+  "id": "ctl-2",
+  "fam": "none",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 9059,
+  "hit": null
+ },
+ {
+  "id": "ctl-2",
+  "fam": "none",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 9059,
+  "hit": null
+ },
+ {
+  "id": "ctl-3",
+  "fam": "none",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 9047,
+  "hit": null
+ },
+ {
+  "id": "ctl-3",
+  "fam": "none",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 9047,
+  "hit": null
+ },
+ {
+  "id": "ctl-4",
+  "fam": "none",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 9038,
+  "hit": null
+ },
+ {
+  "id": "ctl-4",
+  "fam": "none",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 9038,
+  "hit": null
+ },
+ {
+  "id": "ctl-5",
+  "fam": "none",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 9034,
+  "hit": null
+ },
+ {
+  "id": "ctl-5",
+  "fam": "none",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 9034,
+  "hit": null
+ },
+ {
+  "id": "ctl-6",
+  "fam": "none",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 9043,
+  "hit": null
+ },
+ {
+  "id": "ctl-6",
+  "fam": "none",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 9043,
+  "hit": null
+ },
+ {
+  "id": "ctl-7",
+  "fam": "none",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 9050,
+  "hit": null
+ },
+ {
+  "id": "ctl-7",
+  "fam": "none",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 9050,
+  "hit": null
+ },
+ {
+  "id": "ctl-8",
+  "fam": "none",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 9037,
+  "hit": null
+ },
+ {
+  "id": "ctl-8",
+  "fam": "none",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 9037,
+  "hit": null
+ },
+ {
+  "id": "debug-1",
+  "fam": "debug",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:debug",
+  "all": [
+   "fox-dev:debug"
+  ],
+  "usage": 9065,
+  "hit": true
+ },
+ {
+  "id": "debug-1",
+  "fam": "debug",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:debug",
+  "all": [
+   "fox-dev:debug"
+  ],
+  "usage": 9065,
+  "hit": true
+ },
+ {
+  "id": "debug-2",
+  "fam": "debug",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:debug",
+  "all": [
+   "fox-dev:debug"
+  ],
+  "usage": 9091,
+  "hit": true
+ },
+ {
+  "id": "debug-2",
+  "fam": "debug",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:debug",
+  "all": [
+   "fox-dev:debug"
+  ],
+  "usage": 9091,
+  "hit": true
+ },
+ {
+  "id": "design-1",
+  "fam": "design",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:design",
+  "all": [
+   "fox-dev:design"
+  ],
+  "usage": 9070,
+  "hit": true
+ },
+ {
+  "id": "design-1",
+  "fam": "design",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:design",
+  "all": [
+   "fox-dev:design"
+  ],
+  "usage": 9070,
+  "hit": true
+ },
+ {
+  "id": "design-2",
+  "fam": "design",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:design",
+  "all": [
+   "fox-dev:design"
+  ],
+  "usage": 9063,
+  "hit": true
+ },
+ {
+  "id": "design-2",
+  "fam": "design",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:design",
+  "all": [
+   "fox-dev:design"
+  ],
+  "usage": 9063,
+  "hit": true
+ },
+ {
+  "id": "handoff-1",
+  "fam": "handoff",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 9046,
+  "hit": false
+ },
+ {
+  "id": "handoff-1",
+  "fam": "handoff",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 9046,
+  "hit": false
+ },
+ {
+  "id": "handoff-2",
+  "fam": "handoff",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 9049,
+  "hit": false
+ },
+ {
+  "id": "handoff-2",
+  "fam": "handoff",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 9049,
+  "hit": false
+ },
+ {
+  "id": "neg-1",
+  "fam": "not-ui-prose",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 9053,
+  "hit": true
+ },
+ {
+  "id": "neg-1",
+  "fam": "not-ui-prose",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 9053,
+  "hit": true
+ },
+ {
+  "id": "neg-2",
+  "fam": "not-ui-prose",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 9046,
+  "hit": true
+ },
+ {
+  "id": "neg-2",
+  "fam": "not-ui-prose",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 9046,
+  "hit": true
+ },
+ {
+  "id": "neg-3",
+  "fam": "not-ui-prose",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 9050,
+  "hit": true
+ },
+ {
+  "id": "neg-3",
+  "fam": "not-ui-prose",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 9050,
+  "hit": true
+ },
+ {
+  "id": "neg-4",
+  "fam": "not-ui-prose",
+  "arm": "B",
+  "s": "s1",
+  "first": null,
+  "all": [],
+  "usage": 9056,
+  "hit": true
+ },
+ {
+  "id": "neg-4",
+  "fam": "not-ui-prose",
+  "arm": "B",
+  "s": "s2",
+  "first": null,
+  "all": [],
+  "usage": 9056,
+  "hit": true
+ },
+ {
+  "id": "plan-1",
+  "fam": "plan",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:plan",
+  "all": [
+   "fox-dev:plan"
+  ],
+  "usage": 9062,
+  "hit": true
+ },
+ {
+  "id": "plan-1",
+  "fam": "plan",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:plan",
+  "all": [
+   "fox-dev:plan"
+  ],
+  "usage": 9062,
+  "hit": true
+ },
+ {
+  "id": "plan-2",
+  "fam": "plan",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:plan",
+  "all": [
+   "fox-dev:plan"
+  ],
+  "usage": 9070,
+  "hit": true
+ },
+ {
+  "id": "plan-2",
+  "fam": "plan",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:plan",
+  "all": [
+   "fox-dev:plan"
+  ],
+  "usage": 9070,
+  "hit": true
+ },
+ {
+  "id": "prose-1",
+  "fam": "prose",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:prose",
+  "all": [
+   "fox-dev:prose"
+  ],
+  "usage": 9057,
+  "hit": true
+ },
+ {
+  "id": "prose-1",
+  "fam": "prose",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:prose",
+  "all": [
+   "fox-dev:prose"
+  ],
+  "usage": 9057,
+  "hit": true
+ },
+ {
+  "id": "prose-2",
+  "fam": "prose",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:prose",
+  "all": [
+   "fox-dev:prose"
+  ],
+  "usage": 9093,
+  "hit": true
+ },
+ {
+  "id": "prose-2",
+  "fam": "prose",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:prose",
+  "all": [
+   "fox-dev:prose"
+  ],
+  "usage": 9093,
+  "hit": true
+ },
+ {
+  "id": "research-1",
+  "fam": "research",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:research",
+  "all": [
+   "fox-dev:research"
+  ],
+  "usage": 9065,
+  "hit": true
+ },
+ {
+  "id": "research-1",
+  "fam": "research",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:research",
+  "all": [
+   "fox-dev:research"
+  ],
+  "usage": 9065,
+  "hit": true
+ },
+ {
+  "id": "research-2",
+  "fam": "research",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:research",
+  "all": [
+   "fox-dev:research"
+  ],
+  "usage": 9060,
+  "hit": true
+ },
+ {
+  "id": "research-2",
+  "fam": "research",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:research",
+  "all": [
+   "fox-dev:research"
+  ],
+  "usage": 9060,
+  "hit": true
+ },
+ {
+  "id": "review-1",
+  "fam": "review",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:review",
+  "all": [
+   "fox-dev:review"
+  ],
+  "usage": 9030,
+  "hit": true
+ },
+ {
+  "id": "review-1",
+  "fam": "review",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:review",
+  "all": [
+   "fox-dev:review"
+  ],
+  "usage": 9030,
+  "hit": true
+ },
+ {
+  "id": "review-2",
+  "fam": "review",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:review",
+  "all": [
+   "fox-dev:review"
+  ],
+  "usage": 9056,
+  "hit": true
+ },
+ {
+  "id": "review-2",
+  "fam": "review",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:review",
+  "all": [
+   "fox-dev:review"
+  ],
+  "usage": 9056,
+  "hit": true
+ },
+ {
+  "id": "shape-1",
+  "fam": "shape",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:shape",
+  "all": [
+   "fox-dev:shape"
+  ],
+  "usage": 9036,
+  "hit": true
+ },
+ {
+  "id": "shape-1",
+  "fam": "shape",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:shape",
+  "all": [
+   "fox-dev:shape"
+  ],
+  "usage": 9036,
+  "hit": true
+ },
+ {
+  "id": "shape-2",
+  "fam": "shape",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:shape",
+  "all": [
+   "fox-dev:shape"
+  ],
+  "usage": 9051,
+  "hit": true
+ },
+ {
+  "id": "shape-2",
+  "fam": "shape",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:shape",
+  "all": [
+   "fox-dev:shape"
+  ],
+  "usage": 9051,
+  "hit": true
+ },
+ {
+  "id": "ship-1",
+  "fam": "ship",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:ship",
+  "all": [
+   "fox-dev:ship",
+   "fox-dev:verify"
+  ],
+  "usage": 9035,
+  "hit": true
+ },
+ {
+  "id": "ship-1",
+  "fam": "ship",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:ship",
+  "all": [
+   "fox-dev:ship",
+   "fox-dev:verify"
+  ],
+  "usage": 9035,
+  "hit": true
+ },
+ {
+  "id": "ship-2",
+  "fam": "ship",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:ship",
+  "all": [
+   "fox-dev:ship",
+   "fox-dev:verify"
+  ],
+  "usage": 9042,
+  "hit": true
+ },
+ {
+  "id": "ship-2",
+  "fam": "ship",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:ship",
+  "all": [
+   "fox-dev:ship",
+   "fox-dev:verify"
+  ],
+  "usage": 9042,
+  "hit": true
+ },
+ {
+  "id": "swarm-1",
+  "fam": "swarm",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:swarm",
+  "all": [
+   "fox-dev:swarm"
+  ],
+  "usage": 9079,
+  "hit": true
+ },
+ {
+  "id": "swarm-1",
+  "fam": "swarm",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:swarm",
+  "all": [
+   "fox-dev:swarm"
+  ],
+  "usage": 9079,
+  "hit": true
+ },
+ {
+  "id": "swarm-2",
+  "fam": "swarm",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:swarm",
+  "all": [
+   "fox-dev:swarm"
+  ],
+  "usage": 9057,
+  "hit": true
+ },
+ {
+  "id": "swarm-2",
+  "fam": "swarm",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:swarm",
+  "all": [
+   "fox-dev:swarm"
+  ],
+  "usage": 9057,
+  "hit": true
+ },
+ {
+  "id": "ui-1",
+  "fam": "ui",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:ui",
+  "all": [
+   "fox-dev:ui"
+  ],
+  "usage": 9070,
+  "hit": true
+ },
+ {
+  "id": "ui-1",
+  "fam": "ui",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:ui",
+  "all": [
+   "fox-dev:ui"
+  ],
+  "usage": 9070,
+  "hit": true
+ },
+ {
+  "id": "ui-2",
+  "fam": "ui",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:ui",
+  "all": [
+   "fox-dev:ui"
+  ],
+  "usage": 9052,
+  "hit": true
+ },
+ {
+  "id": "ui-2",
+  "fam": "ui",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:ui",
+  "all": [
+   "fox-dev:ui"
+  ],
+  "usage": 9052,
+  "hit": true
+ },
+ {
+  "id": "verify-1",
+  "fam": "verify",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:verify",
+  "all": [
+   "fox-dev:verify"
+  ],
+  "usage": 9054,
+  "hit": true
+ },
+ {
+  "id": "verify-1",
+  "fam": "verify",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:verify",
+  "all": [
+   "fox-dev:verify"
+  ],
+  "usage": 9054,
+  "hit": true
+ },
+ {
+  "id": "verify-2",
+  "fam": "verify",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:verify",
+  "all": [
+   "fox-dev:verify"
+  ],
+  "usage": 9058,
+  "hit": true
+ },
+ {
+  "id": "verify-2",
+  "fam": "verify",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:verify",
+  "all": [
+   "fox-dev:verify"
+  ],
+  "usage": 9058,
+  "hit": true
+ },
+ {
+  "id": "wfa-1",
+  "fam": "write-for-agents",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:write-for-agents",
+  "all": [
+   "fox-dev:write-for-agents"
+  ],
+  "usage": 9042,
+  "hit": true
+ },
+ {
+  "id": "wfa-1",
+  "fam": "write-for-agents",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:write-for-agents",
+  "all": [
+   "fox-dev:write-for-agents"
+  ],
+  "usage": 9042,
+  "hit": true
+ },
+ {
+  "id": "wfa-2",
+  "fam": "write-for-agents",
+  "arm": "B",
+  "s": "s1",
+  "first": "fox-dev:write-for-agents",
+  "all": [
+   "fox-dev:write-for-agents"
+  ],
+  "usage": 9049,
+  "hit": true
+ },
+ {
+  "id": "wfa-2",
+  "fam": "write-for-agents",
+  "arm": "B",
+  "s": "s2",
+  "first": "fox-dev:write-for-agents",
+  "all": [
+   "fox-dev:write-for-agents"
+  ],
+  "usage": 9049,
+  "hit": true
+ }
+]

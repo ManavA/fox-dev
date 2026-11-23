@@ -21,6 +21,7 @@ ENV = {"HOME": f"{W}/home", "USER": "eval", "PATH": os.path.expanduser("~/.local
        "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1", "ENABLE_CLAUDEAI_MCP_SERVERS": "false"}
 LIM = re.compile(r"(usage limit|rate.?limit|\b429\b|overloaded|quota|limit reached|too many requests|credit balance|authentication_error|oauth)", re.I)
 lock = threading.Lock(); spent = [0.0]; halt = [None]
+os.makedirs(f"{W}/{RUNS}", exist_ok=True)
 
 def run(case, arm, s):
     stem = f"{W}/{RUNS}/{case['id']}__{arm}__s{s}"

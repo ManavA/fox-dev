@@ -56,3 +56,23 @@ In the full arm-B re-run, plan fell from 4/4 to 2/4 (plan-2 "migrate ITEMS to sq
 - ship and verify overlap by design; both arms passed their own prompts.
 - 2 samples per case is small. Treat single-case differences as leads.
 - The weekly subscription window showed 0.97 utilisation (allowed_warning) during the run; no run was rejected.
+
+## Re-run with ui and prose (2026-11-22, arm B only)
+
+fox-dev 0.1.0 with fourteen skills (the twelve above plus `ui` and `prose`). 40 cases: the 32 above, 2 should-fire cases each for `ui` and `prose`, and 4 negatives (`neg-*`: a backend argument, a docstring, a unit test, JSON output formatting) where `ui` and `prose` must not fire and any other skill or none is fine. 2 samples, 80 runs, same harness and turn cap, about $1.37. The sample repo is rebuilt by `make_workdir.py` (adds `templates/items.html` for the ui cases), so it is similar but not identical to the earlier ones. Per-run grades: `graded-14skill.json`.
+
+| family | B |
+|---|---|
+| shape, plan, debug, design, review, ship, verify, research, swarm, write-for-agents | 4/4 each |
+| build | 0/4 |
+| handoff | 0/4 (user-invoked only) |
+| ui | 4/4 |
+| prose | 4/4 |
+| original twelve families | 40/48 |
+| all fourteen | 48/56 |
+| controls (false fires) | 0/16 |
+| negatives (ui or prose fired) | 0/8 |
+
+`ui` and `prose` also never appeared as a later Skill call in any other case (ship-2, which writes a PR description, still fires `ship`; wfa-1, which writes a CLAUDE.md, still fires `write-for-agents`). plan-2, which fired nothing twice in the previous re-run, fired `plan` both times here, which supports the run-to-run noise reading. First-request prompt size: median about 9,050 tokens, up about 320 from the twelve-skill pack for the two new descriptions and still below arm A's 10,930 from the first run (different sample repo, so compare loosely).
+
+Across the three arm-B runs the original twelve families scored 36, 38 and 40 of 48, against 31 for arm A in the one arm-A run.
