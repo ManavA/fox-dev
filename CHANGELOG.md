@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.0 (2026-11-22)
 
 First release.
 
@@ -11,3 +11,4 @@ First release.
 - "With foxdb" steps in eleven skills that use the foxdb tools when they are installed and fall back to grep, reads and git otherwise.
 - Firing and outcome evals with their drivers, cases and results under `evals/`.
 - LICENSE and NOTICE.md ship inside the plugin directory as well as at the repository root.
+- A plugin icon (original artwork; SVG source in `assets/icon.svg`).

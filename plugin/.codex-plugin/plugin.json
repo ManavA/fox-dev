@@ -10,5 +10,13 @@
   "repository": "https://github.com/ManavA/fox-dev",
   "license": "MIT",
   "keywords": ["skills", "workflow", "tdd", "code-review", "planning", "debugging", "frontend", "writing", "foxdb"],
-  "skills": "./skills/"
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "fox-dev",
+    "developerName": "ManavA",
+    "category": "Developer Tools",
+    "shortDescription": "One small skill pack for the development loop",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/icon.png"
+  }
 }

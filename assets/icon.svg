@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- fox-dev icon: a geometric fox head. Original artwork, MIT like the rest of the repository. -->
+  <rect width="1024" height="1024" rx="200" fill="#1f2430"/>
+  <!-- ears -->
+  <polygon points="232,200 452,380 300,470" fill="#e8742c"/>
+  <polygon points="792,200 572,380 724,470" fill="#e8742c"/>
+  <polygon points="270,270 400,382 312,430" fill="#3a2418"/>
+  <polygon points="754,270 624,382 712,430" fill="#3a2418"/>
+  <!-- head -->
+  <polygon points="200,420 512,330 824,420 512,850" fill="#f08a3c"/>
+  <!-- cheeks -->
+  <polygon points="200,420 512,660 512,850" fill="#fbf3e8"/>
+  <polygon points="824,420 512,660 512,850" fill="#fbf3e8"/>
+  <!-- eyes and nose -->
+  <polygon points="372,500 440,540 380,556" fill="#1f2430"/>
+  <polygon points="652,500 584,540 644,556" fill="#1f2430"/>
+  <polygon points="470,790 554,790 512,850" fill="#1f2430"/>
+</svg>

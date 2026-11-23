@@ -9,5 +9,6 @@
   "homepage": "https://github.com/ManavA/fox-dev",
   "repository": "https://github.com/ManavA/fox-dev",
   "license": "MIT",
-  "keywords": ["skills", "workflow", "tdd", "code-review", "planning", "debugging", "frontend", "writing", "foxdb"]
+  "keywords": ["skills", "workflow", "tdd", "code-review", "planning", "debugging", "frontend", "writing", "foxdb"],
+  "icon": "./assets/icon.png"
 }

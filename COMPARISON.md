@@ -1,6 +1,6 @@
 # fox-dev compared with the three originals
 
-This note is for deciding whether fox-dev should replace the packs it was built from. It covers each of the 12 fox-dev skills against the original skills it absorbs, then the originals that were not carried over, then context cost.
+This note is for deciding whether fox-dev should replace the packs it was built from. It covers each of the 14 fox-dev skills: the 12 that absorb original skills, compared against them, then the two on-demand skills `ui` and `prose`, which are original text. Then come the originals that were not carried over and context cost.
 
 Sources: mattpocock-skills 1.3.1 (P), superpowers 7.0.0 (S), agent-skills 0.6.17 at commit 8c99fa3 (O). Sizes are for the original SKILL.md file alone (lines / characters); reference files are mentioned where they matter. "Listed" means the skill is model-invocable, so its description sits in the always-loaded skill listing.
 
@@ -10,7 +10,7 @@ Three owner decisions shape the draft:
 - **Execution defaults to the main session.** Parallel lean workers are used only when a plan has 2 or more independent tasks.
 - **Review covers spec, standards and blast radius**, and hands the line-level bug hunt to the built-in `/code-review`.
 
-One deviation from the design: the design counted 9 model-invoked skills, but its own descriptions give 11 (every skill except `handoff`). The draft lists 11. Making `research` and `write-for-agents` user-invoked would save about 400 characters of listing, but they would then stop firing on their own.
+One deviation from the design: the design counted 9 model-invoked skills, but its own descriptions give 11 (every skill except `handoff`). The draft lists 11, and the later `ui` and `prose` skills bring the listed total to 13. Making `research` and `write-for-agents` user-invoked would save about 400 characters of listing, but they would then stop firing on their own.
 
 ---
 
@@ -433,6 +433,54 @@ evals.md describes the eval layout and grader types.
 
 ---
 
+## 13. ui
+
+**Replaces** nothing directly. The closest originals are O frontend-ui-engineering and browser-testing-with-devtools, which were not carried over (see below). `ui` is original fox-dev text, written from scratch; it copies none of those skills and none of Anthropic's `frontend-design` skill.
+
+**New skill, on demand.** Listed. Description: "Frontend and UI design work - choosing a visual direction, layout, typography, colour, responsive behaviour and accessibility, then checking the result in a real browser. Use when the task is to build, restyle, redesign or critique a page, screen, component, form or other visible interface, or when the user says the UI looks wrong. Not for backend, API, CLI, data or logic changes that render nothing."
+
+The "Not for" clause keeps it from loading on work that renders nothing, so it costs only its listing entry outside frontend tasks.
+
+Body (64 lines, no reference files):
+
+- read the existing design system and styling approach before inventing one;
+- for new screens, write the user, the job and a direction in three lines, then commit to type, colour and spacing scales and avoid the default generated look;
+- layout rules (primary task first, 320 px to wide, every state designed, touch targets);
+- accessibility built in (semantic elements, keyboard and focus, contrast, labels, reduced motion, zoom);
+- a browser check: screenshots at two widths, a tab-through, an automated audit, the console; if no browser is available, say so;
+- a rationalisation table.
+
+It hands structural questions to `shape`'s UI prototype and leaves the long accessibility checklist to `review/a11y.md`.
+
+**Behaviour differences**
+
+- Today's stack has no frontend skill, so UI work runs on the model's defaults. `ui` adds a direction step and requires seeing the result rendered before claiming it works.
+
+---
+
+## 14. prose
+
+**Replaces** nothing. None of the three packs has a skill for writing text people read. `prose` is original fox-dev text, written from scratch; it does not copy the text of *The Elements of Style* or any style guide.
+
+**New skill, on demand.** Listed. Description: "Plain, concise prose for people - docs, READMEs, guides, changelogs, release notes, commit message and PR description wording, status reports and summaries. Use when the main task is to write, edit or tighten text a person will read. Not for code or code changes, for finishing a branch (fox-dev:ship), or for prompts, skills and CLAUDE.md files written for agents (fox-dev:write-for-agents)."
+
+The "Not for" clause draws the line with `ship` (finishing a branch, which includes the PR body) and `write-for-agents` (text agents read).
+
+Body (60 lines, no reference files):
+
+- name the reader and what they do next, and lead with the point;
+- sentence rules (short, active, concrete, plain words, specifics, one name per thing, no hype);
+- structure rules (headings, lists, tables, commands in backticks that run as pasted);
+- notes by kind: commit message, PR description, README and docs, changelog, report;
+- an edit pass, where the project's own style guide wins;
+- a rationalisation table, and `fox drift` with foxdb to find what a doc change must reword.
+
+**Behaviour differences**
+
+- New coverage. In the firing re-run (`evals/RESULTS.md`) `ui` and `prose` each fired on all their own cases and on none of the negatives written to tempt them, and did not displace `ship` or `write-for-agents` on their cases.
+
+---
+
 ## Agents
 
 - **fox-dev:reviewer** (19 lines; tools Read, Grep, Glob, Bash). Zero context; returns `path:line - severity - issue - fix`. It derives from superpowers' code-reviewer template and Osmani's @code-reviewer. The design asked for read-only tools; Bash is included so it can run `git diff` and the test command, and the prompt forbids edits. Drop Bash if strict read-only matters more.
@@ -455,7 +503,7 @@ evals.md describes the eval layout and grader types.
 | S | using-superpowers | A SessionStart router that injects about 3.2K chars and says to invoke skills on a 1% chance. Dropped: it competes with the harness's own routing. |
 | S | diagnosing-superpowers | Forensics on superpowers sessions; specific to that pack. |
 | O | using-agent-skills | A router (its hook is not wired on Claude Code). |
-| O | accessibility-engineering, browser-testing-with-devtools, frontend-ui-engineering, performance-optimization, security-and-hardening, observability-and-instrumentation | Domain skills, not the dev loop. Their checklists for security, performance and accessibility are condensed into `review`'s reference files. |
+| O | accessibility-engineering, browser-testing-with-devtools, frontend-ui-engineering, performance-optimization, security-and-hardening, observability-and-instrumentation | Domain skills, not the dev loop. Their checklists for security, performance and accessibility are condensed into `review`'s reference files. Frontend work is covered by fox-dev's own `ui` skill, written from scratch rather than derived from these. |
 | O | ci-cd-and-automation, deprecation-and-migration | Outside the core loop. Expand-contract in `plan` covers the migration pattern. |
 | O | agents accessibility-auditor, security-auditor, web-performance-auditor, test-engineer | Persona agents. One generic reviewer and one implementer replace them; the checklists stand in for the domain personas. |
 | O | commands /a11y, /webperf, /constraints, /spec, /planning, /build, /test, /review, /code-simplify, /ship | User-only wrappers around skills. fox-dev skills can be typed directly (`/fox-dev:build`). |
@@ -477,7 +525,7 @@ The figures below were measured from the files. The listing cost of a skill is i
 | **Current stack (Pocock + superpowers)** | 26 | **about 8,200** |
 | agent-skills, if installed | 26 skills + 5 agents | 12,074 |
 | Current stack plus agent-skills | 57 | about 20,300 |
-| **fox-dev** | 11 skills + 2 agents | **2,663** |
+| **fox-dev** | 13 skills + 2 agents | **3,549** (`ui` and `prose` add about 800) |
 
 Not counted above: the "Software development" router in the global CLAUDE.md (about 1.6K chars). If fox-dev replaces both packs, that section could shrink to a line or two.
 
@@ -488,13 +536,13 @@ Not counted above: the "Software development" router in the global CLAUDE.md (ab
 | mattpocock-skills | 27 | 128,555 | about 204,000 |
 | superpowers | 15 | 161,962 | about 358,000 |
 | agent-skills | 26 + 5 agents | 389,098 | about 459,000, plus about 50K of shared references and commands |
-| **fox-dev** | 12 + 2 agents | **49,317** | **about 71,000** |
+| **fox-dev** | 14 + 2 agents | **57,048** | **about 78,000** |
 
 **A typical idea-to-PR session**
 
 This is shape, plan, build, review, verify and ship, with SKILL.md bodies only.
 
-- **fox-dev:** 4,726 + 4,123 + 5,036 + 4,892 + 2,618 + 3,059 = about 24,500 chars. Reference files add a few thousand when opened.
+- **fox-dev:** 4,779 + 4,123 + 5,036 + 4,892 + 2,618 + 3,059 = about 24,500 chars. Reference files add a few thousand when opened.
 - **Current stack, inline execution:**
   - superpowers brainstorming (10,073), writing-plans (10,317), test-driven-development (9,556), executing-plans (20,249), requesting-code-review (2,970), verification-before-completion (3,598) and finishing-a-development-branch (7,729);
   - Pocock tdd (3,621), code-review (6,640) and pr (4,107);
@@ -502,12 +550,12 @@ This is shape, plan, build, review, verify and ship, with SKILL.md bodies only.
   - Total: about 82,000 chars.
 - **Current stack with subagent-driven-development** instead of executing-plans: about 94,000 chars in the main session, before the implementer and reviewer prompt files that each subagent loads.
 
-So the same path costs about 30% of today's main-session text, and the always-loaded listing is about a third of today's.
+So the same path costs about 30% of today's main-session text, and the always-loaded listing is under half of today's. `ui` and `prose` bodies load only on frontend or writing tasks.
 
 ---
 
 ## Not yet done
 
-- **No evals.** The design's must-fire and must-not-fire comparison against today's stack has not been run. evals.md describes the format; the `evals/` directory does not exist yet.
-- **No Codex manifest.** `.codex-plugin` is not included.
-- **Owner's choice.** Nothing is installed, and the originals are untouched. Whether fox-dev replaces them is the owner's decision.
+- **Evals** have since been run: firing results are in `evals/RESULTS.md`, outcome results in `evals/outcome/`.
+- **Codex manifest** has since been added at `plugin/.codex-plugin/plugin.json` (skills only).
+- **Your choice.** Installing fox-dev leaves the originals untouched. Whether it replaces them is up to you; using both at once splits which skill fires.
