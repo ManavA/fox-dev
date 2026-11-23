@@ -29,6 +29,7 @@ A **context pointer** is a line in context that names out-of-context material an
 - Every step ends on a **completion criterion** that is checkable and demanding ("every caller accounted for", not "check callers"). Vague bounds invite premature completion.
 - Add a **common rationalizations** table for the excuses the agent will reach for, each with a one-line reality.
 - Call other skills explicitly: "Call the Skill tool with `<plugin>:<skill>`", not a prose mention.
+- **Split** only when the cut pays for itself. Split a sequence when later steps tempt the agent to rush the current one; this only helps across a real context boundary (a handoff or a subagent), since an inline call leaves the later steps in view. Split off a new model-invoked skill only for a distinct trigger word or when another skill must reach it, since its description is paid every turn. When user-invoked skills pile up past what a person remembers, one user-invoked router skill that names them helps.
 
 ## Wording
 

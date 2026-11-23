@@ -14,7 +14,9 @@ Ask yourself what you know about what they want, and why.
 - **Everything that matters is in the request** ("make the icon blue", a one-line fix with an obvious test). Skip this skill: do it through `fox-dev:build`, and say in one line any choice you made.
 - **Something non-trivial is missing** (who it is for, what done looks like, which of two behaviours). Continue.
 
-The user can say "skip the questions" at any time. Then state your significant assumptions in one list and proceed.
+The user can say "skip the questions" at any time. Then state your significant assumptions in one list and proceed. If the conversation has already settled every decision, skip the rounds and write the spec straight from it.
+
+**Still a vague idea** (no clear user, problem or direction yet)? Diverge before grilling. Restate it as one "how might we" sentence, then offer 3 to 5 genuinely different directions (another user, the 10x simpler version, the inverse, a different scope), each with what it bets is true and what would kill it. Recommend one and say honestly which are weak. Grill on the direction the user picks; the dropped ones go under Non-goals.
 
 ## 1. Look facts up yourself
 
@@ -33,7 +35,9 @@ Ask the whole frontier in one round. Number each question and give your recommen
 
 A question that depends on another open question in this round waits for a later round. After each round, recompute the frontier. Anchor questions in specifics ("walk me through the last time this bit you") and offer a concrete guess when the user says "you decide".
 
-Done when the frontier is empty: every branch visited, nothing silently assumed, and the user confirms the understanding.
+Done when the frontier is empty: every branch visited, nothing silently assumed, and the user confirms your restatement of what they want, in their own words.
+
+**A decision only someone else can answer** (another team, a customer, a domain expert): ask the user only who it goes to and what they need back, then write a questionnaire file: purpose and the decision riding on it, one paragraph of context, how to answer (deadline, "I don't know" is fine), then themed questions, most important first, one idea each, with an answer stub. List it under Open questions and carry on with the rest of the frontier.
 
 ## 3. Keep an assumptions list
 
@@ -66,6 +70,8 @@ Save it where the repo keeps such docs, else `docs/specs/YYYY-MM-DD-<slug>.md`. 
 
 If the work spans several independent subsystems, write one spec per subsystem. Publishing to an issue tracker is optional; do it only when the repo uses one.
 
+**Changing something already specced and shipped?** Write a small delta spec beside the original instead of editing it: Objective, Current behaviour (link the original), New behaviour, Acceptance criteria (including what must not change), and only the constraints that differ. Once it ships, fold the outcome into the original so it keeps describing the current system. Ideas that arrive mid-build go on a Deferred list in the spec, not into the build.
+
 Done when the user has approved the written spec. Then call the Skill tool with `fox-dev:plan` (multi-step work) or `fox-dev:build` (a single slice).
 
 ## Common rationalizations
@@ -82,4 +88,4 @@ Done when the user has approved the written spec. Then call the Skill tool with 
 - `fox_memory op=recall q=<topic>` for past decisions and failed approaches before the first round.
 - `fox_find q=<topic> kind=doc` for existing specs and ADRs to build on.
 
-Derived from: mattpocock-skills grilling, to-spec, prototype; superpowers brainstorming; agent-skills interview-me, idea-refine, spec-driven-development (MIT, see NOTICE.md).
+Derived from: mattpocock-skills grilling, to-spec, prototype, to-questionnaire; superpowers brainstorming; agent-skills interview-me, idea-refine, spec-driven-development (MIT, see NOTICE.md).

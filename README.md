@@ -2,7 +2,7 @@
 
 One small skill pack for the whole development loop in Claude Code: shape an idea into a spec, design the seams, plan it as vertical tasks, build it test-first, review it with fresh eyes, verify it and ship it. Two on-demand skills cover frontend work and plain writing.
 
-fox-dev replaces three overlapping plugins (superpowers, mattpocock-skills and agent-skills) with fourteen skills and two agents. It merges and condenses their best parts, credited in [NOTICE.md](NOTICE.md), and works well with [fox-db](https://github.com/ManavA/fox-db).
+fox-dev replaces three overlapping plugins (superpowers, mattpocock-skills and agent-skills) with fifteen skills and two agents. It merges and condenses their best parts, credited in [NOTICE.md](NOTICE.md), and works well with [fox-db](https://github.com/ManavA/fox-db).
 
 ## Who it is for
 
@@ -12,7 +12,7 @@ Developers who use Claude Code (or Codex) and want one consistent process instea
 
 In a firing eval (48 prompts that should trigger a skill, 16 control prompts that should not, Sonnet, two samples each; details in [evals/RESULTS.md](evals/RESULTS.md)):
 
-- fox-dev fired the right skill on 36 to 40 of 48 prompts across three runs, against 31 of 48 for superpowers plus mattpocock-skills.
+- fox-dev fired the right skill on 36 to 40 of 48 prompts across three runs, against 31 of 48 for superpowers plus mattpocock-skills. In the 0.1.1 re-run, with cases added for the new content, it fired the right skill on 64 of 72; the only misses were `build`, which never fires first because the model reads files before editing, and the user-invoked `handoff`.
 - No false fires: no skill fired on any control prompt. `ui` and `prose` fired on all their own prompts and on none of the negatives written to tempt them.
 - The opening prompt is smaller: about 9,050 tokens on the first request, against about 10,930 for superpowers plus mattpocock-skills.
 
@@ -38,7 +38,7 @@ codex plugin marketplace add ManavA/fox-dev
 codex plugin add fox-dev@fox-dev
 ```
 
-Codex gets the fourteen skills. The two agents are Claude Code only.
+Codex gets the fifteen skills. The two agents are Claude Code only.
 
 ## Skills
 
@@ -56,6 +56,7 @@ Skills load on their own when a request matches their description. You can also 
 | `/fox-dev:verify` | The evidence gate before saying done, fixed or passing. |
 | `/fox-dev:ship` | Finishing a branch: green suite, clean commits, merge or PR, PR description. |
 | `/fox-dev:handoff` | Only when you call it: a handoff document for the next session. |
+| `/fox-dev:retro` | Only when you call it: a retrospective on a session, proposing changes to checks, standards, CLAUDE.md and tooling. |
 | `/fox-dev:research` | Answering library and API questions from primary sources, with cited notes. |
 | `/fox-dev:write-for-agents` | Writing skills, CLAUDE.md or AGENTS.md files and subagent briefs. |
 | `/fox-dev:ui` | Frontend design: visual direction, layout, accessibility, and checking the result in a browser. Loads only for UI work. |

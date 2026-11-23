@@ -12,7 +12,7 @@
     {
       "name": "fox-dev",
       "source": "./plugin",
-      "description": "Fourteen skills and two agents for the development loop: shape, design, plan, build test-first, swarm, debug, review, verify, ship, handoff, research, write-for-agents, ui and prose.",
+      "description": "Fifteen skills and two agents for the development loop: shape, design, plan, build test-first, swarm, debug, review, verify, ship, handoff, retro, research, write-for-agents, ui and prose.",
       "version": "0.1.0",
       "license": "MIT",
       "category": "development",

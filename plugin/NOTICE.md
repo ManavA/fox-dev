@@ -2,11 +2,12 @@
 
 fox-dev is Copyright (c) 2026 ManavA and released under the MIT License (see LICENSE).
 
-Twelve of its fourteen skills and both agents are a condensed rewrite of skills from three
+Thirteen of its fifteen skills and both agents are a condensed rewrite of skills from three
 MIT-licensed packs. Most text is rewritten, but structure, checklists and some phrases come
 from the originals, so each upstream notice is reproduced in full below. Each derived
 SKILL.md names its sources in a "Derived from" line. The `ui` and `prose` skills are
-original fox-dev text with no upstream source.
+original fox-dev text, apart from one browser-safety paragraph in `ui` that follows
+agent-skills' browser-testing-with-devtools.
 
 This file and LICENSE ship at the repository root and inside the installable plugin
 directory (`plugin/NOTICE.md`, `plugin/LICENSE`), so every installed copy carries the
@@ -22,23 +23,25 @@ notices. `scripts/check.sh` fails if the two copies differ.
 
 | fox-dev | mattpocock-skills | superpowers | agent-skills |
 |---|---|---|---|
-| shape | grilling, grill-me, grill-with-docs, to-spec, prototype | brainstorming | idea-refine, interview-me, spec-driven-development |
+| shape | grilling, grill-me, grill-with-docs, to-spec, prototype, to-questionnaire | brainstorming | idea-refine, interview-me, spec-driven-development |
 | design | codebase-design (+ DEEPENING, DESIGN-IT-TWICE), improve-codebase-architecture, domain-modeling | writing-plans (file structure) | api-and-interface-design, documentation-and-adrs |
-| plan | to-tickets | writing-plans | planning-and-task-breakdown |
+| plan | to-tickets, wayfinder | writing-plans | planning-and-task-breakdown, deprecation-and-migration |
 | build (+ tests.md, mocking.md) | tdd (+ tests.md, mocking.md), implement | test-driven-development, executing-plans | test-driven-development, incremental-implementation |
 | swarm (+ brief.md) | implement-spec | subagent-driven-development, dispatching-parallel-agents, using-git-worktrees | references/orchestration-patterns |
-| debug (+ techniques.md) | diagnosing-bugs | systematic-debugging (+ root-cause-tracing, defense-in-depth, condition-based-waiting) | debugging-and-error-recovery |
-| review (+ checklists) | code-review | requesting-code-review, receiving-code-review | code-review-and-quality, code-simplification, doubt-driven-development, references/security-checklist, performance-checklist, accessibility-checklist |
+| debug (+ techniques.md) | diagnosing-bugs | systematic-debugging (+ root-cause-tracing, defense-in-depth, condition-based-waiting) | debugging-and-error-recovery, performance-optimization, ci-cd-and-automation |
+| review (+ checklists) | code-review | requesting-code-review, receiving-code-review | code-review-and-quality, code-simplification, doubt-driven-development, security-and-hardening, references/security-checklist, performance-checklist, accessibility-checklist |
 | verify | | verification-before-completion | references/definition-of-done, constraint-driven-development |
 | ship | pr | finishing-a-development-branch | git-workflow-and-versioning, shipping-and-launch |
 | handoff | handoff | executing-plans (ledger) | context-engineering |
+| retro | retro | | |
 | research | research | | source-driven-development |
 | write-for-agents (+ evals.md) | writing-for-agents (+ SKILL-MECHANICS) | writing-skills | docs/skill-anatomy, evals |
 | agents/reviewer, agents/implementer | | requesting-code-review (code-reviewer.md) | agents/code-reviewer, agents/test-engineer |
-| ui, prose | | | |
+| ui | | | browser-testing-with-devtools (one paragraph) |
+| prose | | | |
 
-`ui` and `prose` are written from scratch; they do not copy Anthropic's `frontend-design`
-skill or the text of *The Elements of Style*.
+`ui` and `prose` are otherwise written from scratch; they do not copy Anthropic's
+`frontend-design` skill or the text of *The Elements of Style*.
 
 ## License terms of the upstreams
 

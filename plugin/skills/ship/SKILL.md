@@ -1,6 +1,6 @@
 ---
 name: ship
-description: "Finishes a branch: green suite, atomic commits, merge or PR, PR body. Use on \"ship\", \"open a PR\", \"write the PR description\" or \"commit this\", even when one commit looks enough."
+description: "Finishes a branch or a release: green suite, atomic commits, merge or PR, PR body, version and tag. Use BEFORE exploring code on \"ship\", \"open a PR\", \"write the PR description\", \"commit this\" or \"cut a release\", even when one commit looks enough."
 ---
 
 # Ship
@@ -54,6 +54,11 @@ Discarding work needs the user to confirm by name.
 ```
 
 Keep prose brief, use the project's domain words, and skip preambles. Screenshots are the best evidence for visual changes; test output for everything else. A one-way door (data migration, deleted API, published format) states its rollback plan or why there is none.
+
+## 7. Releases and launches
+
+- **Versioned releases**: follow the repo's release recipe when it has one. Otherwise use semver (major breaks consumers, minor adds, patch fixes; if unsure whether a change breaks someone, treat it as major), write the changelog entry in the same change that makes it, and tag the release (`git tag -a vX.Y.Z`) so the tag, the artifact and the changelog agree. Publishing and pushing tags are side effects: confirm first.
+- **Production launches**: ship behind a flag or in stages (internal users, a small canary, then wider). Before starting, name the signals to watch against their pre-launch baseline (error rate, p95 latency, one key business metric) and the line at which you roll back. Write the rollback steps, including what happens to data. After each stage, check the signals before widening; remove the flag once fully out.
 
 Done when the chosen option is complete and reported with the branch, commit range and PR link if any.
 

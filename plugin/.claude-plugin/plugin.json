@@ -1,7 +1,7 @@
 {
   "name": "fox-dev",
   "version": "0.1.0",
-  "description": "One small development-loop skill pack for Claude Code: shape, design, plan, build test-first, swarm, debug, review, verify, ship, handoff, research, write-for-agents, ui and prose. Pairs with foxdb.",
+  "description": "One small development-loop skill pack for Claude Code: shape, design, plan, build test-first, swarm, debug, review, verify, ship, handoff, retro, research, write-for-agents, ui and prose. Pairs with foxdb.",
   "author": {
     "name": "ManavA",
     "url": "https://github.com/ManavA"

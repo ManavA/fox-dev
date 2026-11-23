@@ -64,4 +64,4 @@ Done when both axes have reported (or Spec is marked "no spec") and the bug-hunt
 - `fox_graph rel=impact` with no target gives the working diff's blast radius for the reviewer brief.
 - `fox pack <spec.md>` gives a reviewer the spec plus skeletons of the code it cites; `fox drift` flags docs the change made stale.
 
-Derived from: mattpocock-skills code-review; superpowers requesting-code-review, receiving-code-review; agent-skills code-review-and-quality, code-simplification, doubt-driven-development (MIT, see NOTICE.md).
+Derived from: mattpocock-skills code-review; superpowers requesting-code-review, receiving-code-review; agent-skills code-review-and-quality, code-simplification, doubt-driven-development, security-and-hardening (MIT, see NOTICE.md).

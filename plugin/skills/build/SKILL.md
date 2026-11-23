@@ -21,7 +21,11 @@ Implement in **vertical slices**, each proven by a test you watched fail and the
 4. **Commit** the slice when the repo's commit rules allow (atomic, message says why).
 5. Next slice. Refactoring is a separate pass after the slice is green, or during review, never mixed into red-green.
 
-**Seams.** Use the seams the spec or plan names. Confirm a seam with the user only when it is a **new interface**; existing interfaces need no sign-off.
+**Seams.** Use the seams the spec or plan names. Confirm a seam with the user only when it is a **new interface**, with one line on what testing there catches and what it misses; existing interfaces need no sign-off.
+
+**Scope.** Touch only what the slice needs; note unrelated problems for later instead of fixing them in passing. The tree builds and the suite is green after every slice. Behaviour that is merged before it is finished sits behind a flag that defaults off.
+
+**Sensitive slices.** Before writing code that handles untrusted input, authentication, sessions, secrets, outbound URLs or deletes by a computed path, read [security.md](../review/security.md). For work whose goal is speed, follow the measure, fix, keep-or-revert loop in [techniques.md](../debug/techniques.md).
 
 ## 2. Code came first? Prove the test anyway
 

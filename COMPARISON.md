@@ -1,6 +1,6 @@
 # fox-dev compared with the three originals
 
-This note is for deciding whether fox-dev should replace the packs it was built from. It covers each of the 14 fox-dev skills: the 12 that absorb original skills, compared against them, then the two on-demand skills `ui` and `prose`, which are original text. Then come the originals that were not carried over and context cost.
+This note is for deciding whether fox-dev should replace the packs it was built from. It covers each of the 15 fox-dev skills: the 13 that absorb original skills, compared against them, then the two on-demand skills `ui` and `prose`, which are original text. Then come a full coverage audit of every mattpocock-skills and agent-skills item, the originals that were not carried over, and context cost.
 
 Sources: mattpocock-skills 1.3.1 (P), superpowers 7.0.0 (S), agent-skills 0.6.17 at commit 8c99fa3 (O). Sizes are for the original SKILL.md file alone (lines / characters); reference files are mentioned where they matter. "Listed" means the skill is model-invocable, so its description sits in the always-loaded skill listing.
 
@@ -52,6 +52,8 @@ It then calls `plan` or `build`.
   - mandatory tracker publishing (now optional);
   - brainstorming's 200-300 word playback chunks.
 
+**Added in 0.1.1 (coverage audit):** a divergent step for still-vague ideas (3 to 5 directions, each with its bet and what would kill it; from idea-refine), a restatement check in the user's words (interview-me), a questionnaire for decisions only someone else can answer (to-questionnaire), and delta specs plus a Deferred list for changes to shipped features (spec-driven-development). The ideation frameworks files stay dropped.
+
 **Behaviour differences**
 
 - **Rounds, not single questions.** brainstorming and interview-me ask one question per message. shape asks a numbered round of several questions, so sessions are shorter but each message is denser.
@@ -87,6 +89,8 @@ Body (63 lines, plus DEEPENING.md):
 - *Kept:* Pocock's vocabulary and checks, and his dependency categories (moved into DEEPENING.md together with the design-it-twice recipe). Osmani's contract-first and addition-over-modification rules sit alongside them.
 - *Dropped:* the HTML architecture report, the REST and TypeScript catalogues, inline-comment style guidance, and the GLOSSARY-MAP multi-context layout. Creating a glossary is now optional.
 
+**Added in 0.1.1 (coverage audit):** active domain-language work from domain-modeling (challenge conflicts with the glossary, sharpen fuzzy words, probe with scenarios, cross-check the code, record terms as they settle), domain-modeling's stricter ADR bar (all three of hard to reverse, surprising, a real trade-off), and improve-codebase-architecture's candidate fields and strength labels in prose instead of the HTML report.
+
 **Behaviour differences**
 
 - improve-codebase-architecture was a user-run session that ended in an HTML report. In fox-dev, finding deepening opportunities is a section of a reference skill and ends in a prose list.
@@ -101,9 +105,10 @@ Body (63 lines, plus DEEPENING.md):
 - **S writing-plans** (204 / 10,317). Plans for an engineer with no context. It maps the file structure first, then right-sized tasks. Each task carries Files, Interfaces (consumes/produces) and bite-size steps with full test and implementation code plus expected output. The header holds Global Constraints and Review Focus. Plans are saved under `docs/superpowers/plans/` and executed via subagent-driven-development or executing-plans.
 - **P to-tickets** (105 / 5,804, user-only). Tracer-bullet vertical slices, each with blocking edges, sized for one context window, with prefactoring first and expand-contract for wide refactors. The user is quizzed on granularity and edges, then tickets are published to the tracker or written as one local file per ticket.
 - **O planning-and-task-breakdown** (259 / 10,593). Plan mode, a dependency graph, vertical slicing, tasks with acceptance criteria and verification, checkpoints between phases, and sizing guidelines. Saved to `tasks/plan.md`.
-- P wayfinder (128 / 12,380, user-only), a decision-ticket map for very large work, is not carried over (see the table below).
+- **P wayfinder** (128 / 12,380, user-only). A decision-ticket map on the tracker for work bigger than one session and still foggy: destination, decisions so far, not yet specified, out of scope; typed tickets (research, prototype, grilling, task), claimed one per session.
+- **O deprecation-and-migration** (252). The deprecation decision, advisory vs compulsory, build the replacement first, announce with a migration guide, migrate consumers incrementally, remove at zero usage, zombie code.
 
-**New skill.** Listed. Description: "Breaks an agreed spec into vertical, test-first tasks with dependencies. Use when work spans more than one commit or file, or on "plan", "break this down", "tickets", even when the steps seem obvious."
+**New skill.** Listed. Description: "Breaks an agreed spec into vertical, test-first tasks with dependencies. Use BEFORE exploring code when work spans more than one commit or file, or on "plan", "break this down", "tickets", or planning a migration, deprecation or removal, even when the steps seem obvious." (The "BEFORE exploring" clause and the migration trigger were added in 0.1.1, when a deprecation prompt explored instead of firing.)
 
 Body (75 lines):
 
@@ -125,6 +130,8 @@ The plan is saved to `docs/plans/`. It hands off to `build`, or to `swarm` when 
   - checkbox step lists;
   - mandatory tracker publishing;
   - Osmani's phase checkpoints.
+
+**Added in 0.1.1 (coverage audit):** removing or replacing things others depend on (deprecation-and-migration), an integration branch when expand-contract batches cannot stay green alone (to-tickets), and "Too big and too foggy to slice", a condensed wayfinder decision map. Tracker-native claims and blocking stay dropped.
 
 **Behaviour differences**
 
@@ -173,6 +180,8 @@ Body (72 lines, plus tests.md and mocking.md):
   - feature-flag guidance;
   - Osmani's `/build auto` single-approval mode;
   - superpowers' worktree setup inside executing-plans (moved to swarm).
+
+**Added in 0.1.1 (coverage audit):** a one-line catches/misses note when confirming a new seam (tdd), scope discipline, a green tree between slices and a default-off flag for merged unfinished work (incremental-implementation), and pointers to `review/security.md` and the performance loop in `debug/techniques.md` for sensitive or speed-focused slices.
 
 **Behaviour differences**
 
@@ -242,6 +251,8 @@ Body (76 lines, plus techniques.md): stop-the-line, untrusted output and redacti
 - *Structure.* Pocock's phase structure is the spine, with superpowers' architecture escalation and tracing techniques and Osmani's stop-the-line and untrusted-output rule added.
 - *Dropped:* the pressure-test files, the creation log, the find-polluter script (described in one line instead), Osmani's per-error triage trees, and the HITL script template.
 
+**Added in 0.1.1 (coverage audit):** CI-only failures are reproduced locally from the job's log and environment (ci-cd-and-automation), and techniques.md now holds performance-optimization's full loop: measure against noise, one fix, keep or revert strictly, log reverted attempts, guard with a budget.
+
 **Behaviour differences**
 
 - Close to Pocock's skill. Hypotheses are still shown to the user before testing.
@@ -282,6 +293,8 @@ It also sets a one-line adversary rule for irreversible steps, and a five-step f
   - the language-specific simplification examples;
   - the security and accessibility auditor personas;
   - GitHub thread-reply mechanics.
+
+**Added in 0.1.1 (coverage audit):** security.md gains SSRF, deletes on computed paths, shared-store rate limits, no stack traces to clients and security-and-hardening's ask-first list; axes.md gains dependency discipline, comment and dead-code checks from code-review-and-quality and documentation-and-adrs.
 
 **Behaviour differences**
 
@@ -331,7 +344,7 @@ Body (53 lines):
 - **O shipping-and-launch** (336 / 11,336). Pre-launch checklists (quality, security, performance, accessibility, infrastructure, docs), feature flags, staged rollout, monitoring, error budget and rollback.
 - **O /ship command.** Go/no-go with fan-out reviewers and a rollback plan.
 
-**New skill.** Listed. Description: "Finishes a branch: green suite, atomic commits, merge or PR, PR body. Use on "ship", "open a PR", "write the PR description" or "commit this", even when one commit looks enough."
+**New skill.** Listed. Description: "Finishes a branch or a release: green suite, atomic commits, merge or PR, PR body, version and tag. Use BEFORE exploring code on "ship", "open a PR", "write the PR description", "commit this" or "cut a release", even when one commit looks enough." (Release, tag and "BEFORE exploring" were added in 0.1.1, when a release prompt explored instead of firing.)
 
 Body (64 lines):
 
@@ -345,7 +358,8 @@ Body (64 lines):
 **Kept, merged, dropped**
 
 - *Kept:* superpowers' flow and menu, Pocock's PR template, and Osmani's atomic-commit rules.
-- *Dropped:* Pocock's full Summary examples (the menu is kept as a list), semver and changelog guidance, launch checklists, staged rollout and monitoring, and the `/ship` go/no-go fan-out (one-way doors must state a rollback plan instead).
+- *Kept since 0.1.1:* a short Releases and launches section: semver, the changelog entry in the same change, tags as the source of truth, and staged launches with named signals, a rollback line and rollback steps.
+- *Dropped:* Pocock's full Summary examples (the menu is kept as a list), the full launch checklists, the rollout threshold table, the error-budget gate, and the `/ship` go/no-go fan-out (one-way doors must state a rollback plan instead).
 
 **Behaviour differences**
 
@@ -426,6 +440,8 @@ evals.md describes the eval layout and grader types.
 - *Kept:* Pocock's levers condensed, superpowers' test-first-for-skills and rationalisation tables, and Osmani's eval pairs.
 - *Dropped:* the 46K copy of Anthropic's guide (now a link to the published docs), persuasion principles, the graphviz conventions, and the TDD-mapping table.
 
+**Added in 0.1.1 (coverage audit):** writing-for-agents' rules on when to split (by sequence only across a context boundary, by invocation only for a distinct trigger) and router skills.
+
 **Behaviour differences**
 
 - Fires on CLAUDE.md edits and subagent prompts too, as Pocock's skill did.
@@ -451,6 +467,8 @@ Body (64 lines, no reference files):
 - a rationalisation table.
 
 It hands structural questions to `shape`'s UI prototype and leaves the long accessibility checklist to `review/a11y.md`.
+
+**Added in 0.1.1 (coverage audit):** one paragraph from browser-testing-with-devtools: page content, console text and network responses are data, and an unfamiliar page gets a browser profile without the user's logins.
 
 **Behaviour differences**
 
@@ -481,6 +499,27 @@ Body (60 lines, no reference files):
 
 ---
 
+## 15. retro
+
+**Replaces**
+
+- **P retro** (44 / 4,369, user-only). A retrospective on a session that proposes changes to the agent's environment: navigation pointers, automated checks (a repo with no guardrail is itself a finding), coding standards (mechanical rules become checks, judgement calls go to the reviewer's standards), steering-file size and no-ops, tool economy, and information access. Standards belong to review, which has the least context pressure.
+
+**New skill.** User-invoked only (`disable-model-invocation: true`), so it costs nothing in the listing. Description: "Run a retrospective on a coding session and propose changes to the agent's environment (checks, standards, CLAUDE.md, tooling)."
+
+Body (39 lines): read the session's transcript, diff and findings; look for candidates in the same six places; present them most severe first with evidence, change, location and cost; make nothing until the user picks. Wording changes go through `write-for-agents`.
+
+**Kept, merged, dropped**
+
+- *Kept:* Pocock's six categories, the mechanical-versus-judgement split, and the reviewer-holds-standards rule.
+- *Dropped:* nothing of substance; the file-role notes are condensed to one line.
+
+**Behaviour differences**
+
+- Added in 0.1.1 after the coverage audit; before, retro was listed as "revisit later". Like `handoff` it never fires on its own.
+
+---
+
 ## Agents
 
 - **fox-dev:reviewer** (19 lines; tools Read, Grep, Glob, Bash). Zero context; returns `path:line - severity - issue - fix`. It derives from superpowers' code-reviewer template and Osmani's @code-reviewer. The design asked for read-only tools; Bash is included so it can run `git diff` and the test command, and the prompt forbids edits. Drop Bash if strict read-only matters more.
@@ -488,26 +527,124 @@ Body (60 lines, no reference files):
 
 ---
 
+## Full coverage audit (0.1.1)
+
+Every item in mattpocock-skills and agent-skills, judged by its content (steps, rules, checklists, triggers) against the fox-dev text, not by name. **Full**: every key step and rule is in fox-dev, possibly condensed. **Partial**: the core is in, named parts are left out (the reason says which and why). **Omitted**: not in fox-dev, on purpose.
+
+Versions checked: mattpocock-skills 1.3.1, the 27 skills its plugin.json ships (the local plugin cache matches the v1.3.1 tag); agent-skills 0.6.17 at 8c99fa3, whose default branch head is still 8c99fa3, so nothing has been added since the pin. Pocock has since tagged v1.3.2 (edits to existing skills, no new plugin skill); his default branch adds only an in-progress `software-factory` skill, outside the plugin.
+
+### mattpocock-skills 1.3.1 (27 skills: 14 full, 7 partial, 6 omitted)
+
+| Upstream | fox-dev | Coverage | Notes |
+|---|---|---|---|
+| grilling | shape step 2 | full | Design tree, frontier rounds, recommended answers, facts looked up by subagent, done when the frontier is empty and the user confirms. |
+| grill-me (user) | shape | full | A wrapper that calls grilling. |
+| grill-with-docs (user) | shape + design | full | grilling plus domain-modeling; design's domain-language section does the second half. |
+| to-spec (user) | shape step 5 | partial | Synthesis without interview is shape's "already settled" exit; seams in the spec. The long user-story list is replaced by acceptance criteria, and tracker publishing is optional. |
+| prototype | shape step 4 (+ LOGIC.md, UI.md) | full | Both branches, the shared rules and capture on a throwaway branch. |
+| to-tickets (user) | plan | full | Tracer-bullet slices, blocking edges, prefactor first, expand-contract (with the integration-branch case), the user quiz. One plan file instead of one file per ticket; tracker optional. |
+| wayfinder (user) | plan "Too big and too foggy to slice" | partial | Destination, decisions so far, not yet specified, out of scope, typed decision tickets, one per session. Dropped: tracker-native claims and blocking, refer-by-name, the research-branch convention. |
+| tdd | build (+ tests.md, mocking.md) | partial | Good tests, anti-patterns, red before green, one slice, refactor outside the loop. Seams are confirmed only when new (owner decision), not before every test. |
+| implement (user) | build | full | Typecheck and single tests as you go, full suite at the end, then review, then commit. |
+| implement-spec (user) | swarm | partial | Integration branch, frontier, pointer briefs, background implementers per worktree, final review, single fix pass, cleanup. Dropped: the merger subagent (the orchestrator merges), the note-saving exploration subagent, draft-PR handling. |
+| codebase-design | design (+ DEEPENING.md) | full | Vocabulary, deletion test, interface as test surface, one-versus-two adapters, testability, design it twice. The "rejected framings" list is not repeated. |
+| improve-codebase-architecture (user) | design "Finding deepening opportunities" | partial | Hot-spot scoping, friction signs, deletion test, candidate fields and strength, ADR conflicts, grill the pick. The HTML report with diagrams becomes a prose list. |
+| domain-modeling | design "Recording decisions", "Sharpening the domain language" | partial | Challenge, sharpen, scenarios, cross-check code, inline updates, the three-condition ADR bar. Dropped: the GLOSSARY-MAP multi-context layout and the format files; a glossary is created only when the user wants one. |
+| diagnosing-bugs | debug (+ techniques.md) | full | All six phases, the ten loop types, the completion bar, tagged logs, the perf branch, the missing-seam finding. |
+| code-review | review (+ axes.md) | full | Fixed point, spec and standards sources, the Fowler smell baseline, parallel subagents, verbatim per-axis report. A missing base defaults to the merge-base (stated) instead of asking. |
+| pr | ship step 6 | full | Summary menu, evidence before and after, merge danger with door and blast radius. The worked Summary examples are condensed to the menu. |
+| handoff (user) | handoff | full | Temp-dir doc, suggested skills, pointers not copies, redaction, tailored to the argument. |
+| research | research | full | Background agent, primary sources, one cited notes file where the repo keeps notes. |
+| writing-for-agents (+ SKILL-MECHANICS) | write-for-agents | full | Pointers, the two loads, disclosure, completion criteria, splitting, leading words, negation, pruning, invocation and router skills. |
+| retro (user) | retro (new, user-invoked) | full | All six candidate categories and the reviewer-holds-standards rule. |
+| to-questionnaire (user) | shape step 2 | partial | Ask only who and what is needed, then a themed one-idea-per-question file. Condensed to a paragraph; the full template is not shipped. |
+| ask-matt (user) | none | omitted | Router; see the table below. |
+| setup-matt-pocock-skills (user) | none | omitted | Tracker and label setup for Pocock's own flow. |
+| triage (user) | none | omitted | Issue triage, outside the dev loop. |
+| wizard | none | omitted | Human-step bash wizards; niche, ships a script template. |
+| teach (user) | none | omitted | Teaching, not development. |
+| wait-what (user) | none | omitted | A one-line prompt the user can type. |
+
+### agent-skills 0.6.17 (26 skills: 8 full, 16 partial, 2 omitted)
+
+| Upstream | fox-dev | Coverage | Notes |
+|---|---|---|---|
+| spec-driven-development | shape, plan | full | Scope check (one spec per subsystem), spec fields, gated flow into plan and build, delta specs and Deferred items. The capability-map template is not shipped. |
+| idea-refine | shape (vague-idea step) | partial | How-might-we restatement, distinct directions with bets and killers, honest convergence, not-doing list as Non-goals. Dropped: the frameworks and rubric files, 5 to 8 variations. |
+| interview-me | shape | partial | Guesses attached, specifics, restatement in the user's words, explicit confirmation. One question per message and the 95% confidence number are replaced by numbered rounds (a deliberate style choice). |
+| planning-and-task-breakdown | plan | full | Dependency graph, vertical slices, acceptance and verification per task, sizing, parallel opportunities. Phase checkpoints are dropped; the graph check with the user stands in. |
+| incremental-implementation | build | full | Thin slices, simplicity, scope discipline, compilable between slices, default-off flags, commit per slice. |
+| test-driven-development | build (+ tests.md, mocking.md) | partial | Stack discovery, red-green, Prove-It, real over mocks, DAMP, arrange-act-assert. Dropped: the test-pyramid percentages and size model, browser testing (in `ui` and `debug`). |
+| debugging-and-error-recovery | debug | full | Stop the line, reproduce, localise (bisect), reduce, root cause, guard, verify end to end, untrusted error output. The per-error triage trees are condensed into the loop list. |
+| code-review-and-quality | review (+ axes.md) | partial | Five axes, tests first, severities, change sizing, structural remedies, dependency discipline, dead code. The line-level correctness hunt is handed to the built-in `/code-review` (owner decision); multi-model review is dropped. |
+| code-simplification | review axes.md "Simplification pass", built-in `/simplify` | partial | Preserve behaviour, conventions, clarity, scope to the change, Chesterton's fence, one step at a time. Language-specific examples dropped. |
+| doubt-driven-development | review (adversary before irreversible steps) | partial | One fresh-context adversary on irreversible decisions. The five-step claim/extract/doubt loop and other-CLI reviewers are dropped as too heavy for the default path. |
+| source-driven-development | research | full | Version pinning, official docs, documented patterns, citations. Per-framework URL lists dropped. |
+| api-and-interface-design | design | partial | Hyrum's law, contract first, error semantics, boundary validation, addition over modification, naming. Dropped: the REST, pagination and TypeScript pattern catalogues and the idempotency-key recipe (stack-specific). |
+| documentation-and-adrs | design (ADRs), prose (READMEs, changelogs), review axes (comments), `fox drift` | partial | ADR template and lifecycle, comment rules, doc drift. OpenAPI and inline API-doc tooling are dropped. |
+| context-engineering | handoff, write-for-agents | partial | Restartable session contents, rules files as pointers. The context-packing strategies and budget tactics are dropped; the harness compacts context itself. |
+| constraint-driven-development | verify | partial | The project's gates and the bar-lowering scan of the diff. The CONSTRAINTS.md interview, tool installation and ratchets are dropped as a setup project of their own. |
+| git-workflow-and-versioning | ship (+ prose for commit wording) | full | Atomic commits, messages that say why, splitting a messy tree, safe push, semver, tags, changelog in the same change. Trunk-based and branch-naming advice is left to the repo. |
+| shipping-and-launch | ship step 7, verify definition of done, review checklists | partial | Flags and staged rollout, named signals against baseline, rollback line and steps. The threshold table, error-budget gate and full pre-launch checklists are dropped. |
+| deprecation-and-migration | plan | partial | The deprecation decision, replacement first, advisory by default, migration guide, owner migrates consumers, removal at zero usage, expand-contract. Strangler and adapter pattern write-ups and zombie-code notes are dropped. |
+| performance-optimization | debug techniques.md, review performance.md | full | Measure, find the bottleneck, one fix, keep or revert against noise, log attempts, guard with a budget; checklist targets. |
+| security-and-hardening | review security.md, build pointer | full | Threat model, always-do controls, ask-first list, SSRF, computed-path deletes, rate limits, secrets, dependencies, personal data, LLM features. Code patterns are not shipped. |
+| accessibility-engineering | ui step 4 and 5, review a11y.md | partial | WCAG checks, automated audit plus keyboard and screen-reader passes. The standalone audit-and-remediate workflow with violation triage is not repeated. |
+| frontend-ui-engineering | ui (original text) | partial | Design-system adherence, avoiding the generated look, type, colour, spacing, accessibility, responsive states. Component file structure and state-management advice are left to the project. |
+| browser-testing-with-devtools | ui step 5, debug loop type 4 | partial | Screenshots, console, audit, untrusted page content, separate profile. Chrome DevTools MCP setup and network and performance panel walkthroughs are dropped. |
+| ci-cd-and-automation | debug (CI-only failures), verify (project gates), retro (missing guardrails) | partial | Feeding CI failures back and reproducing locally. Pipeline authoring, deployment strategies and Dependabot setup are project infrastructure, not the loop. |
+| observability-and-instrumentation | none | omitted | See the table below. |
+| using-agent-skills | none | omitted | Router. |
+
+### agent-skills agents, commands, references, hooks and docs
+
+| Upstream | fox-dev | Coverage | Notes |
+|---|---|---|---|
+| agents/code-reviewer | agents/reviewer | full | Zero context, five axes via axes.md, `path:line` findings with severity. |
+| agents/test-engineer | agents/implementer, build | partial | Test-first per task and test quality rules; a coverage-analysis persona is not kept. |
+| agents/security-auditor | agents/reviewer + review/security.md | partial | The checklist replaces the persona. |
+| agents/accessibility-auditor | agents/reviewer + review/a11y.md | partial | The checklist replaces the persona. |
+| agents/web-performance-auditor | agents/reviewer + review/performance.md | partial | The checklist replaces the persona. |
+| /spec | shape | full | Typed as `/fox-dev:shape`. |
+| /plan (Gemini: planning) | plan | full | |
+| /build (incl. `auto`) | build | full | build already works the whole plan without pausing between tasks. |
+| /test | build | full | Includes Prove-It. |
+| /review | review | full | |
+| /code-simplify | review axes.md, `/simplify` | partial | As code-simplification. |
+| /ship | ship | partial | The parallel persona fan-out and go/no-go synthesis are dropped; one-way doors state a rollback plan. |
+| /a11y | ui, review a11y.md | partial | No dedicated audit command. |
+| /webperf | debug techniques.md, review performance.md | partial | No dedicated audit command. |
+| /constraints | verify | partial | As constraint-driven-development. |
+| references/security-checklist | review/security.md | full | |
+| references/performance-checklist | review/performance.md | full | |
+| references/accessibility-checklist | review/a11y.md | full | |
+| references/definition-of-done | verify | full | |
+| references/testing-patterns | build/tests.md, mocking.md | partial | The useful patterns only. |
+| references/orchestration-patterns | swarm | partial | Fan-out, one writer per tree, merge by the orchestrator. |
+| references/observability-checklist | none | omitted | With observability-and-instrumentation. |
+| hooks session-start, sdd-cache, simplify-ignore | none | omitted | fox-dev ships no hooks. |
+| docs/skill-anatomy, evals | write-for-agents (+ evals.md) | full | Section rules, line budget, must-fire and must-not-fire evals. |
+
+---
+
 ## Originals not carried over
 
-| Source | Skill | Why not |
+The full per-item verdicts for mattpocock-skills and agent-skills are in the coverage audit above. Omitted on purpose:
+
+| Source | Item | Why not |
 |---|---|---|
-| P | ask-matt (user) | A router. The harness already routes by description. |
-| P | triage (user) | Issue-tracker triage; outside the dev loop. |
-| P | setup-matt-pocock-skills (user) | Configures Pocock's tracker and labels; fox-dev needs no setup. |
-| P | wayfinder (user) | A decision-ticket map for very large work. It is rarely needed, and `plan` plus `shape` cover normal sizes. Worth keeping if huge multi-week efforts are common. |
-| P | retro (user) | A session retrospective; revisit later. |
-| P | wizard | A guided setup flow; outside the dev loop. |
-| P | teach, to-questionnaire, wait-what (user) | Teaching and questionnaire tools; not development. |
-| P | in-progress (writing-*, setup-ts-deep-modules, chief-of-staff, claude-handoff) and misc (git-guardrails, setup-pre-commit, migrate-to-shoehorn, scaffold-exercises) | Not exposed by his plugin.json; claude-handoff's idea is folded into `handoff`. |
+| P | ask-matt (user) | A router. The harness already routes by description, and the README table is the human index. |
+| P | setup-matt-pocock-skills (user) | Configures Pocock's tracker and labels; fox-dev reads each repo's own conventions and needs no setup. |
+| P | triage (user) | An issue-tracker state machine for incoming issues and PRs; outside the dev loop. |
+| P | wizard | Generates interactive bash wizards from a 200-line template for steps only a human can do. Niche, and fox-dev ships no scripts. |
+| P | teach (user) | Teaching a concept; not development. |
+| P | wait-what (user) | A one-line "re-pitch that" prompt the user can type; `prose` covers plain wording. |
+| P | in-progress (chief-of-staff, claude-handoff, loop-me, setup-ts-deep-modules, writing-beats, writing-fragments, writing-shape) and misc (git-guardrails-claude-code, migrate-to-shoehorn, scaffold-exercises, setup-pre-commit) | Not exposed by his plugin.json. claude-handoff's idea is folded into `handoff`; the rest are personal or stack-specific setups. |
 | S | using-superpowers | A SessionStart router that injects about 3.2K chars and says to invoke skills on a 1% chance. Dropped: it competes with the harness's own routing. |
 | S | diagnosing-superpowers | Forensics on superpowers sessions; specific to that pack. |
-| O | using-agent-skills | A router (its hook is not wired on Claude Code). |
-| O | accessibility-engineering, browser-testing-with-devtools, frontend-ui-engineering, performance-optimization, security-and-hardening, observability-and-instrumentation | Domain skills, not the dev loop. Their checklists for security, performance and accessibility are condensed into `review`'s reference files. Frontend work is covered by fox-dev's own `ui` skill, written from scratch rather than derived from these. |
-| O | ci-cd-and-automation, deprecation-and-migration | Outside the core loop. Expand-contract in `plan` covers the migration pattern. |
-| O | agents accessibility-auditor, security-auditor, web-performance-auditor, test-engineer | Persona agents. One generic reviewer and one implementer replace them; the checklists stand in for the domain personas. |
-| O | commands /a11y, /webperf, /constraints, /spec, /planning, /build, /test, /review, /code-simplify, /ship | User-only wrappers around skills. fox-dev skills can be typed directly (`/fox-dev:build`). |
-| O | references/observability-checklist, testing-patterns, orchestration-patterns | Observability is out of scope. The useful parts of testing-patterns are in `build/tests.md`, and of orchestration-patterns in `swarm`. |
+| O | using-agent-skills (+ hooks/session-start.sh) | A router; its hook is not wired on Claude Code, and fox-dev has no session-start injection by design. |
+| O | observability-and-instrumentation, references/observability-checklist | Production telemetry design (structured logs, metrics, tracing, alerts) is domain work, not the loop. `ship` names the signals to watch during a launch; `debug` covers instrumentation for diagnosis. |
+| O | hooks sdd-cache, simplify-ignore | Opt-in hooks; fox-dev ships none, so nothing runs unless a skill is picked. |
 
 ---
 
@@ -525,7 +662,7 @@ The figures below were measured from the files. The listing cost of a skill is i
 | **Current stack (Pocock + superpowers)** | 26 | **about 8,200** |
 | agent-skills, if installed | 26 skills + 5 agents | 12,074 |
 | Current stack plus agent-skills | 57 | about 20,300 |
-| **fox-dev** | 13 skills + 2 agents | **3,549** (`ui` and `prose` add about 800) |
+| **fox-dev** | 13 skills + 2 agents | **3,689** (`ui` and `prose` add about 800; `retro` and `handoff` are user-invoked and add nothing) |
 
 Not counted above: the "Software development" router in the global CLAUDE.md (about 1.6K chars). If fox-dev replaces both packs, that section could shrink to a line or two.
 
@@ -536,13 +673,13 @@ Not counted above: the "Software development" router in the global CLAUDE.md (ab
 | mattpocock-skills | 27 | 128,555 | about 204,000 |
 | superpowers | 15 | 161,962 | about 358,000 |
 | agent-skills | 26 + 5 agents | 389,098 | about 459,000, plus about 50K of shared references and commands |
-| **fox-dev** | 14 + 2 agents | **57,048** | **about 78,000** |
+| **fox-dev** | 15 + 2 agents | **about 64,400** | **about 90,500** |
 
 **A typical idea-to-PR session**
 
 This is shape, plan, build, review, verify and ship, with SKILL.md bodies only.
 
-- **fox-dev:** 4,779 + 4,123 + 5,036 + 4,892 + 2,618 + 3,059 = about 24,500 chars. Reference files add a few thousand when opened.
+- **fox-dev:** 6,283 + 5,703 + 5,673 + 4,918 + 2,618 + 3,997 = about 29,200 chars (0.1.1; about 24,500 in 0.1.0 before the coverage additions). Reference files add a few thousand when opened.
 - **Current stack, inline execution:**
   - superpowers brainstorming (10,073), writing-plans (10,317), test-driven-development (9,556), executing-plans (20,249), requesting-code-review (2,970), verification-before-completion (3,598) and finishing-a-development-branch (7,729);
   - Pocock tdd (3,621), code-review (6,640) and pr (4,107);
@@ -550,7 +687,7 @@ This is shape, plan, build, review, verify and ship, with SKILL.md bodies only.
   - Total: about 82,000 chars.
 - **Current stack with subagent-driven-development** instead of executing-plans: about 94,000 chars in the main session, before the implementer and reviewer prompt files that each subagent loads.
 
-So the same path costs about 30% of today's main-session text, and the always-loaded listing is under half of today's. `ui` and `prose` bodies load only on frontend or writing tasks.
+So the same path costs about 35% of today's main-session text, and the always-loaded listing is under half of today's. `ui` and `prose` bodies load only on frontend or writing tasks.
 
 ---
 

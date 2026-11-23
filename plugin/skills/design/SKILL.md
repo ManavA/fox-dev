@@ -39,13 +39,25 @@ When the interface shape is genuinely open and the module has real leverage, pro
 
 ## Finding deepening opportunities
 
-Scope first. Look where the code changed recently (`git log --oneline`, hot files) or where the user points. Note friction: one concept spread across many small modules, shallow wrappers, tests that mock internals, the same change touching many files. Present candidates with the deletion-test result and expected leverage; let the user pick.
+Scope first. Look where the code changed recently (`git log --oneline`, hot files) or where the user points; a read-only subagent can walk it. Note friction: one concept spread across many small modules, shallow wrappers, tests that mock internals, the same change touching many files, code that is hard to test through its current interface.
+
+Present each candidate as: files, problem, proposed deepening (in plain words, no interface yet), benefits in terms of locality, leverage and tests, and a strength (strong, worth exploring, speculative). End with the one you would do first. Raise a candidate that contradicts an ADR only when the friction is real enough to reopen it, and say so. Let the user pick, then grill the chosen one with `fox-dev:shape`. If the user rejects a candidate for a reason a future review would need, offer an ADR so it is not suggested again.
 
 ## Recording decisions
 
-- **ADR** when a decision is hard to reverse, surprising, or will be re-litigated. Follow the repo's existing ADR convention; else `docs/adr/NNNN-<slug>.md` with Status, Context, Decision, Alternatives considered, Consequences. ADRs are append-only; supersede rather than edit.
-- **Glossary term** when a word is ambiguous or overloaded in the domain. Add it to the repo's `GLOSSARY.md` if one exists; create one only when the user wants it.
+- **ADR** only when all three hold: hard to reverse, surprising to a reader without the context, and the result of a real trade-off between alternatives. Follow the repo's existing ADR convention; else `docs/adr/NNNN-<slug>.md` with Status, Context, Decision, Alternatives considered, Consequences. ADRs are append-only; supersede rather than edit.
+- **Glossary term** when a word is ambiguous or overloaded in the domain. Add it to the repo's `GLOSSARY.md` if one exists; create one only when the user wants it. A glossary holds meanings only: no implementation detail, no decisions.
 - Read existing ADRs and glossary before proposing a design, and do not re-open a recorded decision without saying so.
+
+## Sharpening the domain language
+
+When the conversation is about what the domain's words mean, work the model actively:
+
+- **Challenge conflicts**: "the glossary says a cancellation is X, you seem to mean Y; which is it?"
+- **Sharpen fuzzy words**: "account" could be the Customer or the User; propose one precise term for each.
+- **Probe with scenarios**: invent concrete edge cases that force a boundary between two concepts.
+- **Cross-check the code**: when the user says how something works, check the code agrees and raise any contradiction.
+- Record each settled term as it settles, not in a batch at the end.
 
 ## Common rationalizations
 

@@ -3,8 +3,8 @@
 ## Five axes (for the reviewer's own reading of the diff)
 
 1. **Correctness**: does it do what the spec says, including edge cases and error paths? Do the tests prove it, and would they fail without the change? (Line-level bug hunting is the built-in `/code-review`'s job.)
-2. **Readability and simplicity**: names reveal intent; no cleverness a reader must decode; no dead code, debug output or commented-out blocks; nothing added "for later".
-3. **Architecture**: fits existing patterns; dependencies point the right way; modules stay deep (see `fox-dev:design`); no new seam with a single adapter.
+2. **Readability and simplicity**: names reveal intent; no cleverness a reader must decode; no dead code, debug output or commented-out blocks; nothing added "for later". Comments say why and record gotchas; a comment that restates the code goes. Code the change made unreachable is deleted in the same change.
+3. **Architecture**: fits existing patterns; dependencies point the right way; modules stay deep (see `fox-dev:design`); no new seam with a single adapter. Each new third-party dependency earns its place: needed beyond what the standard library or an existing dependency does, maintained, licence compatible, size proportionate.
 4. **Security**: untrusted input validated at the boundary; authorization on every access; no secrets in code or logs. See [security.md](security.md).
 5. **Performance**: no N+1 queries, unbounded loops or loads, or work on the hot path that could be cached or deferred. See [performance.md](performance.md).
 

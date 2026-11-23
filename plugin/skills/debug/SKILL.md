@@ -26,6 +26,8 @@ Ways to build one, roughly in order:
 9. A differential run: old vs new version, or two configs, diffed.
 10. A human-in-the-loop script, last resort, that still captures output for you.
 
+**Fails only in CI?** Get the failing job's log and its exact command, then match CI's versions, environment and flags locally and build the loop from that, so each fix is proven locally before it is pushed.
+
 **Tighten** it: faster (narrow scope, cache setup), sharper (assert the exact symptom, not "did not crash"), deterministic (pin time, seed randomness, isolate files and network). For flaky bugs, raise the reproduction rate (loop 100 times, add stress) until it is debuggable.
 
 Done when you have **run** the command at least once and it is red-capable (asserts the user's exact symptom), deterministic, fast and runnable unattended. If you cannot build one, stop, list what you tried, and ask for access, a captured artifact, or permission to add instrumentation.
@@ -73,4 +75,4 @@ Trace backwards: from the symptom to the caller that passed the bad value, up to
 - `fox_memory op=recall kind=failed q=<symptom>` before Phase 3; `fox_memory op=post kind=failed` for each ruled-out hypothesis.
 - `fox_find q=<error text or symbol>` locates the error site; `fox_graph target=<fn> rel=callers` walks backwards.
 
-Derived from: mattpocock-skills diagnosing-bugs; superpowers systematic-debugging; agent-skills debugging-and-error-recovery (MIT, see NOTICE.md).
+Derived from: mattpocock-skills diagnosing-bugs; superpowers systematic-debugging; agent-skills debugging-and-error-recovery, performance-optimization, ci-cd-and-automation (MIT, see NOTICE.md).
