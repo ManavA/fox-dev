@@ -1,9 +1,16 @@
 # Notices
 
-fox-dev is a condensed rewrite of skills from three MIT-licensed packs. Most text is
-rewritten, but structure, checklists and some phrases come from the originals, so each
-upstream notice is reproduced in full below. Each derived SKILL.md names its sources in
-a "Derived from" line.
+fox-dev is Copyright (c) 2026 ManavA and released under the MIT License (see LICENSE).
+
+Twelve of its fourteen skills and both agents are a condensed rewrite of skills from three
+MIT-licensed packs. Most text is rewritten, but structure, checklists and some phrases come
+from the originals, so each upstream notice is reproduced in full below. Each derived
+SKILL.md names its sources in a "Derived from" line. The `ui` and `prose` skills are
+original fox-dev text with no upstream source.
+
+This file and LICENSE ship at the repository root and inside the installable plugin
+directory (`plugin/NOTICE.md`, `plugin/LICENSE`), so every installed copy carries the
+notices. `scripts/check.sh` fails if the two copies differ.
 
 | Upstream | Version / commit | Repository |
 |---|---|---|
@@ -28,6 +35,26 @@ a "Derived from" line.
 | research | research | | source-driven-development |
 | write-for-agents (+ evals.md) | writing-for-agents (+ SKILL-MECHANICS) | writing-skills | docs/skill-anatomy, evals |
 | agents/reviewer, agents/implementer | | requesting-code-review (code-reviewer.md) | agents/code-reviewer, agents/test-engineer |
+| ui, prose | | | |
+
+`ui` and `prose` are written from scratch; they do not copy Anthropic's `frontend-design`
+skill or the text of *The Elements of Style*.
+
+## License terms of the upstreams
+
+Each upstream's LICENSE was checked at the version or commit above (and at its current
+default branch): all four are the standard MIT License, with no other license files in
+those repositories. MIT allows use, modification, redistribution, sublicensing and sale,
+including commercial redistribution of derived text, on one condition: the copyright notice
+and permission notice stay in all copies or substantial portions. This file meets that
+condition. MIT grants no trademark rights; the upstream names appear here only to credit
+the sources and imply no endorsement.
+
+## Relationship to foxdb
+
+foxdb (https://github.com/ManavA/foxdb) is a separate project under AGPL-3.0-or-later.
+fox-dev contains no foxdb code. Its "With foxdb" blocks only name foxdb commands and tools
+to call when they are installed, so fox-dev's MIT license is unaffected by foxdb's.
 
 ## Second-hand credit
 
