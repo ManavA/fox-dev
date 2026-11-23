@@ -38,5 +38,15 @@
 {"id":"neg-1","family":"not-ui-prose","prompt":"Add a `limit` argument to list_items in app.py that caps how many items it returns."},
 {"id":"neg-2","family":"not-ui-prose","prompt":"Add a docstring to TTLCache.set in cache.py."},
 {"id":"neg-3","family":"not-ui-prose","prompt":"Write a test in tests/test_utils.py for paginate's last partial page."},
-{"id":"neg-4","family":"not-ui-prose","prompt":"Make handle() in app.py return the items as pretty-printed JSON with two-space indentation."}
+{"id":"neg-4","family":"not-ui-prose","prompt":"Make handle() in app.py return the items as pretty-printed JSON with two-space indentation."},
+{"id":"shape-3","family":"shape","prompt":"I have a vague idea for some kind of notifications feature for this service. Help me figure out what it should even be."},
+{"id":"shape-4","family":"shape","prompt":"Pagination shipped last month. Now we want cursor-based pagination instead of page numbers. Spec out the change before anyone codes it."},
+{"id":"design-3","family":"design","prompt":"People on the team use 'item' and 'listing' to mean different things and it keeps causing bugs. Help me pin down our domain terms."},
+{"id":"design-4","family":"design","prompt":"Look through this codebase for modules that are too shallow and suggest refactors that would deepen them."},
+{"id":"plan-3","family":"plan","prompt":"Other teams still call list_items, and we want to remove it in favour of the paginated endpoint. Plan the deprecation and removal."},
+{"id":"debug-3","family":"debug","prompt":"GET /items got about three times slower after last week's changes. Find out why and make it fast again."},
+{"id":"debug-4","family":"debug","prompt":"The test suite passes on my machine but test_expiry fails in CI every time. Figure out what's going on."},
+{"id":"ship-3","family":"ship","prompt":"Cut the 0.2.0 release: bump the version, update the changelog and tag it."},
+{"id":"negr-1","family":"not-retro","prompt":"Do a retrospective on this session: what should we change in CLAUDE.md or our checks so the next agent does better?"},
+{"id":"negr-2","family":"not-retro","prompt":"retro: what went wrong in this session and what should we fix in our setup?"}
 ]

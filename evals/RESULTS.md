@@ -76,3 +76,23 @@ fox-dev 0.1.0 with fourteen skills (the twelve above plus `ui` and `prose`). 40 
 `ui` and `prose` also never appeared as a later Skill call in any other case (ship-2, which writes a PR description, still fires `ship`; wfa-1, which writes a CLAUDE.md, still fires `write-for-agents`). plan-2, which fired nothing twice in the previous re-run, fired `plan` both times here, which supports the run-to-run noise reading. First-request prompt size: median about 9,050 tokens, up about 320 from the twelve-skill pack for the two new descriptions and still below arm A's 10,930 from the first run (different sample repo, so compare loosely).
 
 Across the three arm-B runs the original twelve families scored 36, 38 and 40 of 48, against 31 for arm A in the one arm-A run.
+
+## Re-run after the coverage audit (0.1.1, 2026-11-22, arm B only)
+
+fox-dev with fifteen skills: `retro` added (user-invoked, so it is not in the listing) and new body sections in shape, design, plan, build, debug, review, ship, ui and write-for-agents. 50 cases: the 40 above, 8 should-fire cases for the new content (shape-3 vague idea, shape-4 delta spec, design-3 domain terms, design-4 shallow modules, plan-3 deprecation, debug-3 slowdown, debug-4 CI-only failure, ship-3 release) and 2 negatives (`negr-*`, family `not-retro`: "do a retrospective" prompts where `retro` must not fire). `analyze.py` now reads any `not-<a>-<b>` family as a negative for the named skills. 2 samples, same harness and turn cap. Per-run grades: `graded-15skill.json`.
+
+First pass (100 runs, about $1.93): every family hit 4/4 or 8/8 except build and handoff (0/4, as before), plan 4/6 and ship 4/6. plan-3 ("plan the deprecation and removal") and ship-3 ("cut the 0.2.0 release") fired nothing both times: the model explored the repo and hit the turn cap, the same pattern shape showed before its description gained "BEFORE exploring". Controls 0/16, negatives 0/12.
+
+The plan and ship descriptions were then changed: both now say "Use BEFORE exploring code"; plan names "planning a migration, deprecation or removal", ship names "cut a release" and covers version and tag. The 34 cases those two descriptions could affect (shape, plan, build, review, ship, verify, swarm, prose, all controls and negatives) were re-run (68 runs, about $1.15; `graded-15skill-rerun.json`):
+
+| family | B |
+|---|---|
+| shape | 8/8 |
+| plan | 6/6 |
+| ship | 6/6 |
+| review, verify, swarm, prose | 4/4 each |
+| build | 0/4 |
+| controls (false fires) | 0/16 |
+| negatives (ui, prose or retro fired) | 0/12 |
+
+With the unchanged families from the first pass (debug 8/8, design 8/8, research, write-for-agents and ui 4/4, handoff 0/4), the current descriptions score 64 of 72, 56 of 64 on the original twelve families. No skill fired on any control, `retro` never fired, and `ui` and `prose` fired only on their own cases. First-request prompt size: median about 9,100 tokens, up about 50 from 0.1.0 for the longer plan and ship descriptions.
