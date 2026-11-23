@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.1 (Unreleased)
+## 0.1.1 (2026-11-22)
 
 - New user-invoked `retro` skill: reads a session's transcript and results and proposes ranked changes to the agent's environment (checks, standards, steering files, tooling). It has no description in the skill listing, so it costs no context until you call it.
 - Coverage audit against mattpocock-skills 1.3.1 and agent-skills 0.6.17; the full per-item table is in COMPARISON.md. Gaps filled inside existing skills:

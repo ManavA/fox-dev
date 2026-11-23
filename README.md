@@ -83,3 +83,7 @@ Without fox-db every step falls back to grep, file reads and git. fox-db is a se
 MIT. See [LICENSE](LICENSE). fox-dev is derived in part from MIT-licensed work by Matt Pocock, Jesse Vincent and Addy Osmani; their notices are in [NOTICE.md](NOTICE.md), which also ships inside the plugin.
 
 Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+
+## Contributing
+
+fox-dev is free and open source (MIT). See [CONTRIBUTING.md](CONTRIBUTING.md).
