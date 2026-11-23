@@ -1,17 +1,23 @@
 {
   "name": "fox-dev",
-  "owner": { "name": "ManavA" },
+  "description": "fox-dev: one small development-loop skill pack for Claude Code and Codex.",
+  "owner": {
+    "name": "ManavA",
+    "url": "https://github.com/ManavA"
+  },
   "metadata": {
-    "description": "One small dev-loop skill pack: shape, plan, build test-first, review, verify, ship.",
-    "version": "0.1.0-draft"
+    "version": "0.1.0"
   },
   "plugins": [
     {
       "name": "fox-dev",
       "source": "./plugin",
-      "description": "Dev-loop skills merged from mattpocock-skills, superpowers and agent-skills: shape, design, plan, build, swarm, debug, review, verify, ship, handoff, research, write-for-agents.",
-      "version": "0.1.0-draft",
-      "license": "MIT"
+      "description": "Fourteen skills and two agents for the development loop: shape, design, plan, build test-first, swarm, debug, review, verify, ship, handoff, research, write-for-agents, ui and prose.",
+      "version": "0.1.0",
+      "license": "MIT",
+      "category": "development",
+      "homepage": "https://github.com/ManavA/fox-dev",
+      "keywords": ["skills", "workflow", "tdd", "code-review", "planning", "debugging", "frontend", "writing", "foxdb"]
     }
   ]
 }

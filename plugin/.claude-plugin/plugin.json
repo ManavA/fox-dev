@@ -1,8 +1,13 @@
 {
   "name": "fox-dev",
-  "version": "0.1.0-draft",
-  "description": "Dev-loop skills: shape, design, plan, build test-first, swarm, debug, review, verify, ship, handoff, research, write-for-agents.",
-  "author": { "name": "ManavA" },
+  "version": "0.1.0",
+  "description": "One small development-loop skill pack for Claude Code: shape, design, plan, build test-first, swarm, debug, review, verify, ship, handoff, research, write-for-agents, ui and prose. Pairs with foxdb.",
+  "author": {
+    "name": "ManavA",
+    "url": "https://github.com/ManavA"
+  },
+  "homepage": "https://github.com/ManavA/fox-dev",
+  "repository": "https://github.com/ManavA/fox-dev",
   "license": "MIT",
-  "keywords": ["tdd", "code-review", "planning", "debugging", "workflow"]
+  "keywords": ["skills", "workflow", "tdd", "code-review", "planning", "debugging", "frontend", "writing", "foxdb"]
 }
