@@ -473,7 +473,7 @@ Body (60 lines, no reference files):
 - structure rules (headings, lists, tables, commands in backticks that run as pasted);
 - notes by kind: commit message, PR description, README and docs, changelog, report;
 - an edit pass, where the project's own style guide wins;
-- a rationalisation table, and `fox drift` with foxdb to find what a doc change must reword.
+- a rationalisation table, and `fox drift` with fox-db to find what a doc change must reword.
 
 **Behaviour differences**
 

@@ -68,7 +68,7 @@ Trace backwards: from the symptom to the caller that passed the bad value, up to
 | "Log everything and grep." | One targeted probe per hypothesis. |
 | "It's flaky, can't debug it." | Raise the reproduction rate first. |
 
-## With foxdb (when the `fox_*` tools are listed)
+## With fox-db (when the `fox_*` tools are listed)
 
 - `fox_memory op=recall kind=failed q=<symptom>` before Phase 3; `fox_memory op=post kind=failed` for each ruled-out hypothesis.
 - `fox_find q=<error text or symbol>` locates the error site; `fox_graph target=<fn> rel=callers` walks backwards.

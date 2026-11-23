@@ -53,7 +53,7 @@ Write for a reader who is busy and capable. Say the thing, show the evidence, st
 | "Hedging is safer." | One accurate qualifier beats three vague ones. |
 | "It reads fine to me." | You know what you meant. Read it as someone who does not. |
 
-## With foxdb (when the `fox_*` tools are listed)
+## With fox-db (when the `fox_*` tools are listed)
 
 - `fox drift <doc>` lists code the doc cites that changed, moved or vanished, so you know what to reword.
 

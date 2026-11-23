@@ -55,7 +55,7 @@ Scope first. Look where the code changed recently (`git log --oneline`, hot file
 | "Many small functions are cleaner." | Small and shallow moves complexity into every caller. Run the deletion test. |
 | "I'll test the private helper directly." | Test through the interface, or the interface is wrong. |
 
-## With foxdb (when the `fox_*` tools are listed)
+## With fox-db (when the `fox_*` tools are listed)
 
 - `fox_graph target=<symbol> rel=callers` and `rel=impact` measure a module's leverage and which callers a seam change touches.
 - `fox_read target=<path>` gives declaration outlines; `fox_find kind=doc q=adr` finds recorded decisions.

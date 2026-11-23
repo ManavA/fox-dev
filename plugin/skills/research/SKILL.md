@@ -26,7 +26,7 @@ Done when every claim in the notes has a primary-source citation and the origina
 | "A blog post shows how." | Use it to find the official doc, then cite that. |
 | "The docs are vague, I'll guess." | Read the source. |
 
-## With foxdb (when the `fox_*` tools are listed)
+## With fox-db (when the `fox_*` tools are listed)
 
 - `fox_memory op=recall q=<topic>` and `fox_find kind=doc q=<topic>` for notes already written on this question.
 

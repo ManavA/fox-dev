@@ -77,7 +77,7 @@ Done when the user has approved the written spec. Then call the Skill tool with 
 | "One question at a time is friendlier." | A numbered round with recommendations is faster and the user can answer "yes". |
 | "I'll decide this detail quietly." | Put it on the assumptions list. |
 
-## With foxdb (when the `fox_*` tools are listed)
+## With fox-db (when the `fox_*` tools are listed)
 
 - `fox_memory op=recall q=<topic>` for past decisions and failed approaches before the first round.
 - `fox_find q=<topic> kind=doc` for existing specs and ADRs to build on.

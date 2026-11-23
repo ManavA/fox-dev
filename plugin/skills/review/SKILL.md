@@ -17,7 +17,7 @@ Get the base from the user (commit, branch, tag, `main`); if they gave none, use
 
 - **Spec**: issue references in commits, a path the user gave, or a spec/plan under `docs/` matching the branch. If none exists, ask; if there is none, the Spec axis reports "no spec".
 - **Standards**: every file that says how code is written here: CLAUDE.md, AGENTS.md, CONTRIBUTING, CODING_STANDARDS, lint and format config. The smell baseline in [axes.md](axes.md) applies on top; a documented repo rule always wins over it.
-- **Blast radius**: the callers and consumers of every changed public symbol, config key, schema, CLI flag or file format (grep, or the foxdb block below).
+- **Blast radius**: the callers and consumers of every changed public symbol, config key, schema, CLI flag or file format (grep, or the fox-db block below).
 
 ### 3. Dispatch fresh-context reviewers in parallel
 
@@ -59,7 +59,7 @@ Done when both axes have reported (or Spec is marked "no spec") and the bug-hunt
 | "The reviewer said so, I'll change it." | Verify first. Reviewers are wrong too. |
 | "Spec and standards are one list." | A change can pass one and fail the other. Keep them apart. |
 
-## With foxdb (when the `fox_*` tools are listed)
+## With fox-db (when the `fox_*` tools are listed)
 
 - `fox_graph rel=impact` with no target gives the working diff's blast radius for the reviewer brief.
 - `fox pack <spec.md>` gives a reviewer the spec plus skeletons of the code it cites; `fox drift` flags docs the change made stale.

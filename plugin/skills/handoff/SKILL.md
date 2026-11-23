@@ -26,7 +26,7 @@ Redact secrets, tokens and personal data. If the user passed an argument, tailor
 
 Done when a reader could run step 1 of Next steps without asking anything.
 
-## With foxdb (when the `fox_*` tools are listed)
+## With fox-db (when the `fox_*` tools are listed)
 
 - `fox handoff create --goal ... --state ... --next ... --question ...`, then `fox handoff render h:<N> --for claude|codex`, instead of the markdown file.
 

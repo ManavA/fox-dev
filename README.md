@@ -2,7 +2,7 @@
 
 One small skill pack for the whole development loop in Claude Code: shape an idea into a spec, design the seams, plan it as vertical tasks, build it test-first, review it with fresh eyes, verify it and ship it. Two on-demand skills cover frontend work and plain writing.
 
-fox-dev replaces three overlapping plugins (superpowers, mattpocock-skills and agent-skills) with fourteen skills and two agents. It merges and condenses their best parts, credited in [NOTICE.md](NOTICE.md), and works well with [foxdb](https://github.com/ManavA/foxdb).
+fox-dev replaces three overlapping plugins (superpowers, mattpocock-skills and agent-skills) with fourteen skills and two agents. It merges and condenses their best parts, credited in [NOTICE.md](NOTICE.md), and works well with [fox-db](https://github.com/ManavA/fox-db).
 
 ## Who it is for
 
@@ -65,9 +65,9 @@ Agents (Claude Code): `fox-dev:reviewer`, a zero-context reviewer that returns `
 
 No hooks and no session-start injection: nothing runs unless a skill is picked.
 
-## With foxdb
+## With fox-db
 
-[foxdb](https://github.com/ManavA/foxdb) is a local code index and shared agent context. When its `fox_*` tools are present, several skills use them in place of grep and re-reading files:
+[fox-db](https://github.com/ManavA/fox-db) is a local code index and shared agent context. When its `fox_*` tools are present, several skills use them in place of grep and re-reading files:
 
 - `debug` and `design` walk callers and impact through the call graph (`fox_graph`), and `debug` records ruled-out hypotheses in shared memory.
 - `plan` and `review` measure a change's blast radius (`fox_graph rel=impact`), and `review` hands reviewers the spec plus the code it cites (`fox pack`).
@@ -75,7 +75,7 @@ No hooks and no session-start injection: nothing runs unless a skill is picked.
 - `swarm` dispatches workers with writer leases and a shared board (`fox dispatch`, `fox swarm`), and `handoff` writes a handoff packet any harness can pick up.
 - `ship` and `prose` list docs that a change made stale (`fox drift`).
 
-Without foxdb every step falls back to grep, file reads and git. foxdb is a separate project under AGPL-3.0-or-later; fox-dev contains none of its code.
+Without fox-db every step falls back to grep, file reads and git. fox-db is a separate project under AGPL-3.0-or-later; fox-dev contains none of its code.
 
 ## License
 

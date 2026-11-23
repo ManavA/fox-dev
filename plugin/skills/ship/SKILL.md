@@ -57,7 +57,7 @@ Keep prose brief, use the project's domain words, and skip preambles. Screenshot
 
 Done when the chosen option is complete and reported with the branch, commit range and PR link if any.
 
-## With foxdb (when the `fox_*` tools are listed)
+## With fox-db (when the `fox_*` tools are listed)
 
 - `fox_graph rel=impact` with no target gives the blast radius line; `fox drift` lists docs the branch made stale.
 

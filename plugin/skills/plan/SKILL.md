@@ -67,7 +67,7 @@ Done when the user has approved the graph and every spec acceptance criterion ma
 | "I'll put the full code in the plan." | That is implementing twice. Give interfaces, tests and acceptance. |
 | "One big task is simpler." | It cannot be reviewed or reverted in parts. Slice it. |
 
-## With foxdb (when the `fox_*` tools are listed)
+## With fox-db (when the `fox_*` tools are listed)
 
 - `fox_graph target=<symbol> rel=impact` on each symbol a task changes, to fill Files and Interfaces and to spot shared files between tasks.
 - `fox handoff create --goal ... --next ...` turns the approved plan into a packet that `swarm` can dispatch from.

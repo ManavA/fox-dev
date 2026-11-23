@@ -65,7 +65,7 @@ Done when every task's acceptance criteria hold, each has a test you watched fai
 | "I'll refactor while I'm here." | Finish green first; refactor as its own step. |
 | "Mocking this internal class is easier." | It couples the test to the implementation. Use the real thing. |
 
-## With foxdb (when the `fox_*` tools are listed)
+## With fox-db (when the `fox_*` tools are listed)
 
 - Before changing a signature, `fox_graph target=<symbol> rel=callers`; done means every caller row is accounted for (updated, tested, or ruled unaffected).
 

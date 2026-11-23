@@ -61,7 +61,7 @@ Same as `build`: decide conflicts and record `Ruling:` lines. Stop only for dest
 | "I'll paste the whole file into the brief." | Point at it. The worker can read. |
 | "Parallel is always faster." | Not for 1 task or coupled tasks; merge pain eats the gain. |
 
-## With foxdb (when the `fox_*` tools are listed)
+## With fox-db (when the `fox_*` tools are listed)
 
 - Board protocol: `fox_memory op=read since=me` before each dispatch; workers post fact/failed/question with handle evidence and return handles.
 - `fox dispatch --writer` holds one writer lease per repo, `--reviewer` for reviewers; `fox wait` blocks on them; `fox swarm run plan.toml` runs a whole plan with a review panel.

@@ -50,11 +50,11 @@ and permission notice stay in all copies or substantial portions. This file meet
 condition. MIT grants no trademark rights; the upstream names appear here only to credit
 the sources and imply no endorsement.
 
-## Relationship to foxdb
+## Relationship to fox-db
 
-foxdb (https://github.com/ManavA/foxdb) is a separate project under AGPL-3.0-or-later.
-fox-dev contains no foxdb code. Its "With foxdb" blocks only name foxdb commands and tools
-to call when they are installed, so fox-dev's MIT license is unaffected by foxdb's.
+fox-db (https://github.com/ManavA/fox-db) is a separate project under AGPL-3.0-or-later.
+fox-dev contains no fox-db code. Its "With fox-db" blocks only name fox-db commands and tools
+to call when they are installed, so fox-dev's MIT license is unaffected by fox-db's.
 
 ## Second-hand credit
 
