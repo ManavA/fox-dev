@@ -1,12 +1,12 @@
 # Hard outcome eval on real foxdb gaps
 
-Sonnet (claude-sonnet-5-5) at effort high, 150-turn / 4 USD per-run caps, Opus (claude-opus-5-5) low-effort blind judge. 3 tasks x 3 arms (none / current = superpowers 7.0.0 + mattpocock-skills 1.3.1 / foxdev) x 2 runs = 18 graded runs, 3 skills-enabled arms all confirmed loaded (59 skills visible in current). Each run: own git worktree of foxdb eb36a4c, own cargo target dir, scratch HOME. Spend: about 22.6 USD runs + 2.0 judges = 24.6 USD of the 80 cap. Driver and hidden tests: `hard/` (run_hard.py, hidden/, tasks.json, aggregate_hard.py, regrade_cpp.py); every run's diff: `hard/patches/`; per-run table: `hard/results/tables.md`.
+Sonnet (claude-sonnet-5-5) at effort high, 150-turn / 4 USD per-run caps [3], Opus (claude-opus-5-5) low-effort blind judge [4]. 3 tasks x 3 arms (none / current = superpowers 7.0.0 + mattpocock-skills 1.3.1 / foxdev) x 2 runs = 18 graded runs, 3 skills-enabled arms all confirmed loaded (59 skills visible in current). Each run: own git worktree of foxdb eb36a4c, own cargo target dir, scratch HOME. Spend: about 22.6 USD runs + 2.0 judges = 24.6 USD of the 80 cap. Driver and hidden tests: `hard/` (run_hard.py, hidden/, tasks.json, aggregate_hard.py, regrade_cpp.py); every run's diff: `hard/patches/`; per-run table: `hard/results/tables.md`.
 
 Tasks (prompts in hard/tasks.json, 2-4 user-style sentences, no file hints):
 1. c-typedef: C member calls and stores through typedef'd function-pointer fields (incl. typedef of typedef).
 2. py-mro: Python self./super() method calls follow MRO (mixins, diamonds, subclass overrides).
 3. cpp-recv: C++ member calls through typed receivers (locals, pointer/ref params, members, auto = Ctor(), make_unique) are certain, not guesses.
-Hidden tests (Rust, tests/treesitter.rs style, inline fixture projects through code::run): 4 / 5 / 5, all fail or partly fail on unmodified main (c-typedef 3 of 4 fail, py-mro 4 of 5, cpp-recv 4 of 5). The c-typedef tests were also run against a plain-member rewrite of the fixtures as an oracle (4/4 pass), so they are satisfiable. py-mro and cpp-recv have no reference solution: they are satisfiable only in the sense that agents passed them.
+Hidden tests [1] (Rust, tests/treesitter.rs style, inline fixture projects through code::run): 4 / 5 / 5, all fail or partly fail on unmodified main (c-typedef 3 of 4 fail, py-mro 4 of 5, cpp-recv 4 of 5). The c-typedef tests were also run against a plain-member rewrite of the fixtures as an oracle (4/4 pass), so they are satisfiable. py-mro and cpp-recv have no reference solution: they are satisfiable only in the sense that agents passed them.
 
 ## Per arm (mean of 6 runs)
 
@@ -37,3 +37,6 @@ Hidden tests (Rust, tests/treesitter.rs style, inline fixture projects through c
 - The original task list used a typedef task and a positional/macro-initializer task; the latter was dropped on the owner's update and its hidden test is not in this suite.
 - turns/cost: cost is cumulative and correct; turns is wrong for the two runs noted above.
 - Run records live in the session scratchpad (runs/*/grade.json, out.jsonl transcripts), not committed; patches and tables are.
+
+## References
+Numbers refer to the list in [README.md](README.md#references): [1] SWE-bench, [3] AI Agents That Matter, [4] Judging LLM-as-a-Judge.

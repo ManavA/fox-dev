@@ -1,7 +1,7 @@
 # Skill-firing comparison: current stack vs fox-dev (2026-11-21)
 
 Setup: Claude Code 2.1.329, model claude-sonnet-5-5, scratch HOME with subscription credentials only, `--setting-sources project`, a tiny Python git repo as cwd, tools Skill/Read/Grep/Glob only, `--max-turns 2`, 2 samples per case. 32 cases (24 should-fire, 2 per fox-dev skill; 8 controls), 128 runs, about $2.70.
-Arm A: superpowers 7.0.0 + mattpocock-skills 1.3.1 (`--plugin-dir` from the plugin cache). Arm B: `plugin/` only.
+Arm A: superpowers 7.0.0 [1] + mattpocock-skills 1.3.1 [2] (`--plugin-dir` from the plugin cache). Arm B: `plugin/` only.
 Grading: first Skill tool call must be a plugin skill in the expected family (A: see FAM in analyze.py; B: the same-named fox-dev skill). Built-in bare-name skills (`code-review`, `init`, `debug`, `verify`) count as misses. Reproduce with `run_firing.py` and `analyze.py` in this directory; per-run grades are in `graded-*.json`.
 
 ## Hit rate (first Skill call in family, 4 runs per family per arm)
@@ -96,3 +96,10 @@ The plan and ship descriptions were then changed: both now say "Use BEFORE explo
 | negatives (ui, prose or retro fired) | 0/12 |
 
 With the unchanged families from the first pass (debug 8/8, design 8/8, research, write-for-agents and ui 4/4, handoff 0/4), the current descriptions score 64 of 72, 56 of 64 on the original twelve families. No skill fired on any control, `retro` never fired, and `ui` and `prose` fired only on their own cases. First-request prompt size: median about 9,100 tokens, up about 50 from 0.1.0 for the longer plan and ship descriptions.
+
+## References
+1. superpowers, by Jesse Vincent. https://github.com/obra/superpowers
+2. mattpocock-skills, by Matt Pocock. https://github.com/mattpocock/skills
+3. agent-skills, by Addy Osmani (merged into fox-dev, not an arm here). https://github.com/addyosmani/agent-skills
+
+The outcome evals' method references are in [outcome/README.md](outcome/README.md#references).

@@ -2,7 +2,7 @@
 
 One small skill pack for the whole development loop in Claude Code: shape an idea into a spec, design the seams, plan it as vertical tasks, build it test-first, review it with fresh eyes, verify it and ship it. Two on-demand skills cover frontend work and plain writing.
 
-fox-dev replaces three overlapping plugins (superpowers, mattpocock-skills and agent-skills) with fifteen skills and two agents. It merges and condenses their best parts, credited in [NOTICE.md](NOTICE.md), and works well with [fox-db](https://github.com/ManavA/fox-db).
+fox-dev replaces three overlapping plugins (superpowers [1], mattpocock-skills [2] and agent-skills [3]) with fifteen skills and two agents. It merges and condenses their best parts, credited in [NOTICE.md](NOTICE.md), and works well with [fox-db](https://github.com/ManavA/fox-db).
 
 ## Who it is for
 
@@ -16,7 +16,7 @@ In a firing eval (48 prompts that should trigger a skill, 16 control prompts tha
 - No false fires: no skill fired on any control prompt. `ui` and `prose` fired on all their own prompts and on none of the negatives written to tempt them.
 - The opening prompt is smaller: about 9,050 tokens on the first request, against about 10,930 for superpowers plus mattpocock-skills.
 
-What the skills do not do: in outcome evals, where Sonnet solved coding tasks on its own with hidden tests and a blind judge ([evals/outcome/](evals/outcome/)), code quality was the same with fox-dev, with the older plugins and with no skills at all. Skills rarely fired during those autonomous runs, and loading any plugin added roughly 8 to 15 percent to cost per run. fox-dev gives you a cleaner, more predictable process when you ask for one; it does not make the model write better code.
+What the skills do not do: in outcome evals, where Sonnet solved coding tasks on its own with hidden tests [5], checked to fail before and pass with a reference solution [7], and a blind judge [6] ([evals/outcome/](evals/outcome/)), code quality was the same with fox-dev, with the older plugins and with no skills at all. Skills rarely fired during those autonomous runs, and loading any plugin added roughly 8 to 15 percent to cost per run [8]. fox-dev gives you a cleaner, more predictable process when you ask for one; it does not make the model write better code.
 
 ## Install
 
@@ -77,6 +77,27 @@ No hooks and no session-start injection: nothing runs unless a skill is picked.
 - `ship` and `prose` list docs that a change made stale (`fox drift`).
 
 Without fox-db every step falls back to grep, file reads and git. fox-db is a separate project under AGPL-3.0-or-later; fox-dev contains none of its code.
+
+## Acknowledgements
+
+fox-dev merges and condenses three MIT-licensed skill packs; [NOTICE.md](NOTICE.md) maps each
+fox-dev skill to its sources and carries their license notices.
+
+1. superpowers, by Jesse Vincent. https://github.com/obra/superpowers
+2. mattpocock-skills, by Matt Pocock. https://github.com/mattpocock/skills
+3. agent-skills, by Addy Osmani. https://github.com/addyosmani/agent-skills
+4. humanlayer/skills, `show-me` (the PR summary menu in `ship`, through mattpocock-skills' `pr`). https://github.com/humanlayer/skills
+
+The outcome evals follow Stanford CS329Z, Engineering AI Agents (Fall 2026,
+https://cs329z.stanford.edu/): Lecture 12, Data Selection & Quality; Lecture 13, Evaluation
+Fundamentals & Benchmark Design; Lecture 15, LLM-as-Judge & Evaluation Infrastructure; and
+Lecture 16, the SWE-bench guest lecture. Their method references are in
+[evals/outcome/README.md](evals/outcome/README.md#references), among them:
+
+5. Jimenez, C. E., et al. (2023). SWE-bench: Can Language Models Resolve Real-World GitHub Issues? https://arxiv.org/abs/2310.06770
+6. Zheng, L., et al. (2023). Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena. https://arxiv.org/abs/2306.05685
+7. Zhu, Y., et al. (2025). Establishing Best Practices for Building Rigorous Agentic Benchmarks. https://arxiv.org/abs/2507.02825
+8. Kapoor, S., et al. (2024). AI Agents That Matter. https://arxiv.org/abs/2407.01502
 
 ## License
 
